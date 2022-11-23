@@ -1,21 +1,19 @@
 #+PROPERTY: header-args :results output none
 * rudimentary configuration
 #+begin_src emacs-lisp :comments no
-  (require 'org-tempo)
+(require 'org-tempo)
 #+end_src
 
 ** Personal information
 #+begin_src emacs-lisp
-  (setq user-full-name "tu10ng"
-	user-mail-address "2059734099@qq.com")
+(setq user-full-name "tu10ng"
+      user-mail-address "2059734099@qq.com")
 #+end_src
 
 ** Workaround
 it should be empty in the best scenario
 #+begin_src emacs-lisp
 (setq native-comp-async-jobs-number 20)
-(setq org-edit-src-content-indentation 0)
-(setq org-startup-indented t)
 
 
 #+end_src
@@ -29,71 +27,258 @@ Test some package
 *** simple settings
 [[https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org#use-better-defaults][angrybacon/dotemacs]]
 #+begin_src emacs-lisp
-  (setq-default
-   delete-by-moving-to-trash t                      ; Delete files to trash
-   window-combination-resize t                      ; take new window space from all other windows (not just current)
-   x-stretch-cursor t                               ; Stretch cursor to the glyph width
-  )
+(setq-default
+ delete-by-moving-to-trash t                      ; Delete files to trash
+ window-combination-resize t                      ; take new window space from all other windows (not just current)
+ x-stretch-cursor t                               ; Stretch cursor to the glyph width
+ indent-tabs-mode nil
+ tab-width 4
+ sentence-end-double-space nil
+ )
 
-  (setq undo-limit 80000000                         ; Raise undo-limit to 80Mb
-	auto-save-default t                         ; Nobody likes to lose work, I certainly don't
-	truncate-string-ellipsis "…"                ; Unicode ellispis are nicer than "...", and also save /precious/ space
-	password-cache-expiry nil                   ; I can trust my computers ... can't I?
-	scroll-preserve-screen-position 'always     ; Don't have `point' jump around
-	scroll-margin 2                             ; It's nice to maintain a little margin
-	word-wrap-by-category t                     ; Different languages live together happily
-	warning-minimum-level  :error               ; Who cares about warnings?
-	org-return-follows-link t)                  ; Organize it!
+(setq undo-limit 80000000
+      auto-save-default t
+      truncate-string-ellipsis "…"
+      password-cache-expiry nil   
+      scroll-preserve-screen-position 'always 
+      scroll-margin 2                         
+      word-wrap-by-category t  
+      warning-minimum-level  :error 
+      org-return-follows-link t
+      confirm-kill-processes nil
+      read-process-output-max 1048576  ; cat /proc/sys/fs/pipe-max-size
+      inhibit-startup-screen t
+      inhibit-startup-message t
+      inhibit-startup-buffer-menu t
+      initial-buffer-choice nil
+      initial-scratch-message nil
+      shell-command-prompt-show-cwd 1
+      inhibit-compacting-font-caches t
+      display-raw-bytes-as-hex t
+      redisplay-skip-fontification-on-input t
+      use-short-answers t
+      y-or-n-p-use-read-key t
+      read-char-choice-use-read-key t
+      make-backup-files nil
+      next-line-add-newlines t
+      )
 
-  (global-subword-mode 1)                           ; Iterate through CamelCase words
+(put 'upcase-region    'disabled nil)
+(put 'downcase-region  'disabled nil)
+(put 'narrow-to-defun  'disabled nil)
+(put 'narrow-to-page   'disabled nil)
+(put 'narrow-to-region 'disabled nil)
 
-  (global-visual-line-mode 1)                       ; Wrap lines at window edge, not at 80th character: my screen is wide enough!
+(global-subword-mode 1)           
 
-  (scroll-bar-mode)                                 ; I like scroll bars
+(global-visual-line-mode 1)       
+
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+#+end_src
+*** rm scratch buffer
+#+begin_src emacs-lisp
+(setq initial-scratch-message "")
+(defun remove-scratch-buffer ()
+  (if (get-buffer "*scratch*")
+      (kill-buffer "*scratch*")))
+(add-hook 'after-change-major-mode-hook 'remove-scratch-buffer)
 #+end_src
 *** frame sizing
 #+begin_src emacs-lisp
-(push  '(alpha-background . 95) default-frame-alist)
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(toggle-frame-maximized)
+(toggle-frame-fullscreen)
 #+end_src
 *** auto-customizations
 change though customisation interface will not add to =init.el=.
 #+begin_src emacs-lisp
-    (setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
-  (when (file-exists-p custom-file)
-    (load custom-file))
+(setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
+(when (file-exists-p custom-file)
+  (load custom-file))
+#+end_src
+*** all-the-icons
+#+begin_src emacs-lisp
+(use-package all-the-icons)
+
 #+end_src
 
 *** window
-??? find file other window
+**** split default
+#+begin_src emacs-lisp
+(setq split-height-threshold nil)         ;don't split vertically
+(setq split-width-threshold 0)            ;need to set this bc `split-window-sensibly' will disregard height-threshold
 
-*** mouse ???to fast
+#+end_src
+**** shackle
+#+begin_src emacs-lisp
+;; Customize popwin behavior
+(use-package shackle                    ;*customize* not working?
+  :hook (after-init . shackle-mode)
+  :custom
+  (shackle-default-size 0.5)
+  (shackle-default-alignment 'bellow)
+  (shackle-rules
+   '((magit-status-mode    :select t :align right)
+     (magit-log-mode       :select t :align below :popup t :same nil)
+     (magit-rev-mode       :select t :align right)
+     ("*quickrun*"         :select t)
+     (profiler-report-mode :select t)
+     (xwidget-webkit-mode  :select t :same t)
+     (apropos-mode         :select t :align right :size 0.2)
+     (help-mode            :select t :align right)
+     (helpful-mode         :select t :align right :size 0.3)
+     (comint-mode          :select t :align right :size 0.2)
+     (grep-mode            :select t :align right)
+     (rg-mode              :select t :align right)
+     (compilation-mode     :select t :align right :size 0.2)
+     (Man-mode             :select t :align right)
+     (info-mode            :select t :align right :popup t :size 0.5)
+     ("*elfeed-entry*"     :select t :align right :popup t :same nil :size 0.5) ;
+     ("*eww*"              :select t :align right :popup t :size 0.6)
+     ("*Org todo*"         :select t :align right :popup t :size 0.3)
+     ("*Org Agenda*"       :select t :align right :popup t :size 0.3)
+     ("*devdocs*"          :select t :align right :popup t :size 0.6)
+     ("*Shell Command Output*"    :select nil :align bellow :size 0.4)
+     ("*Async Shell Command*"     :select nil :align bellow :size 0.4)
+     ("*Org-Babel Error Output*"  :select nil :align bellow :size 0.3)
+     ("*package update results*"  :select nil :align bellow :size 10)
+     ("*Process List*"            :select t   :align bellow :size 0.3)
+     ("*Occur*"                   :select t   :align bellow)
+     ("\\*eldoc\\( for \\)?.*\\*" :select nil :align bellow :size 15 :regexp t))))
+
+;; All `temp-buffer's, e.g. *Completions*, will never mess up window layout.
+(use-package help
+  :ensure nil
+  :hook (after-init . temp-buffer-resize-mode)
+  :custom
+  (help-window-select t))
+
+#+end_src
+
+*** gc
+
+#+begin_src emacs-lisp
+(use-package gcmh)
+(setq gcmh-high-cons-threshold (* 1 1024 1024))
+(gcmh-mode 1)
+
+
+#+end_src
+*** emacs c source directory
+#+begin_src emacs-lisp
+(setq source-directory "/home/qb/Projects/emacs-git/")
+(setq find-function-C-source-directory "/home/qb/Projects/emacs-git/src/")
+
+
+#+end_src
+
+*** mouse 
 Thanks to Po Lu, scrolling in emacs is great again!
 #+begin_src emacs-lisp
 (pixel-scroll-precision-mode 1)
 (setq pixel-scroll-precision-large-scroll-height 60
-      pixel-scroll-precision-interpolation-factor 4.0)
+      pixel-scroll-precision-interpolation-factor 3.0)
+#+end_src
+
+*** auto-revert
+#+begin_src emacs-lisp
+(use-package autorevert
+  :hook (after-init . global-auto-revert-mode)
+  :custom
+  (auto-revert-interval 1)
+  (auto-revert-avoid-polling t)
+  (auto-revert-verbose nil)
+  (auto-revert-remote-files t)
+  (auto-revert-check-vc-info t)
+  )
+
+#+end_src
+
+*** auto-save
+recommend use with vc to avoid accident lost.
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/site-lisp/auto-save/") ; add auto-save to your load-path
+(require 'auto-save)
+(auto-save-enable)
+(add-hook 'makefile-mode-hook #'(lambda () (fset 'makefile-warn-suspicious-lines 'ignore)))
+
+(setq auto-save-silent t)   ; quietly save
+(setq auto-save-delete-trailing-whitespace nil)  ; automatically delete spaces at the end of the line when saving
+
+
 #+end_src
 
 *** Drag text from emacs to other apps
 Thanks to Po Lu!
 #+begin_src emacs-lisp
- (setq
-  mouse-drag-and-drop-region-cross-program t
-  mouse-drag-and-drop-region t)
+(setq
+ mouse-drag-and-drop-region-cross-program t
+ mouse-drag-and-drop-region t)
 #+end_src
 ** emacs configuration
 *** modules
 **** interface
+***** capf
+****** corfu
+space as separator is useful
 #+begin_src emacs-lisp
-  ;; (dolist (module '(company vertico hl-todo))
-  ;;   (use-package module))
-  (use-package vertico)
-  (use-package hl-todo)
+(use-package corfu
+  :custom
+  (corfu-auto t)
+  (corfu-auto-delay 0)
+  :config
+  (global-corfu-mode)
+  :bind (:map corfu-map
+              ("SPC" . corfu-insert-separator)
+              ("TAB" . corfu-next)
+              ([tab] . corfu-next)
+              ("S-TAB" . corfu-previous)
+              ([backtab] . corfu-previous)))
+
+(use-package corfu-doc
+  :hook
+  (corfu-mode . corfu-doc-mode)
+  :bind (:map corfu-map
+              ("M-n" . corfu-doc-scroll-down)
+              ("M-p" . corfu-doc-scroll-up)
+              ("M-d" . corfu-doc-toggle)))
+
+(use-package orderless
+  :config
+  (setq completion-styles '(orderless partial-completion)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
+  ;; :init
+  ;; (setq completion-styles '(orderless)
+  ;;       completion-category-defaults nil
+  ;;       completion-category-overrides '((file (styles . (partial-completion))))))
+
+;; (use-package cape
+;;   :init
+  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
+  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; (add-to-list 'completion-at-point-functions #'cape-file)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword))
+
+(setq completion-cycle-threshold 1)
+
+(setq tab-always-indent 'complete)
+#+end_src
+
+***** lsp
+#+begin_src emacs-lisp
+(use-package eglot)
+(use-package consult-eglot)
+(dolist (hook '(prog-mode-hook))
+  (add-hook hook #'eglot-ensure))
 #+end_src
 **** language support
 #+begin_src emacs-lisp
-  (use-package systemd)
+(use-package systemd)
 
 #+end_src
 **** everything in emacs
@@ -111,14 +296,75 @@ loading theme is remarkably slow
 #+end_src
 **** modeline
 **** misc
+#+begin_src emacs-lisp
+(use-package hl-todo)
+(global-hl-todo-mode)
+#+end_src
 *** helper macros
+*** proxy
+#+begin_src emacs-lisp
+(setq url-proxy-services
+      '(("http" . "127.0.0.1:8889")
+        ("https" . "127.0.0.1:8889"))
+      )
+#+end_src
+
 *** babel
 #+begin_src emacs-lisp
-  (setq org-confirm-babel-evaluate nil)
+(setq org-confirm-babel-evaluate nil)
 
 #+end_src
-** other thins
+** other things
 *** editor interaction
+*** restart emacs
+#+begin_src emacs-lisp
+(use-package restart-emacs)
+(defun restart-emacs-reopen-current-file ()
+  "restart emacs then reopen the file being visited when casting this command.
+if the buffer isn't a file, simply restart emacs."
+  (interactive)
+  (if (buffer-file-name)
+      (restart-emacs (split-string (buffer-file-name)))
+    (restart-emacs)))
+
+#+end_src
+*** restore session
+#+BEGIN_SRC emacs-lisp
+;; Back to the previous position
+(use-package saveplace
+  :hook (after-init . save-place-mode))
+
+;; persist history over emacs restarts.
+(use-package savehist
+  :init (savehist-mode))
+
+
+#+end_src
+*** recent file
+#+begin_src emacs-lisp
+(use-package recentf
+  :hook (after-init . recentf-mode)
+  :custom
+  (recentf-max-saved-items 3000)
+  (recentf-auto-cleanup 'never)
+  (recentf-exclude '( ;; Folders on MacOS start
+                     "^/private/tmp/"
+                     "^/var/folders/"
+                     ;; Folders on MacOS end
+                     "^/tmp/"
+                     "/ssh\\(x\\)?:"
+                     "/su\\(do\\)?:"
+                     "^/usr/include/"
+                     "/TAGS\\'"
+                     "COMMIT_EDITMSG\\'")))
+#+END_SRC
+*** tmp daemon server
+#+begin_src emacs-lisp
+(require 'server)
+(or (eq (server-running-p) t)
+    (server-start))
+#+end_src
+
 *** system daemon
 For running a systemd service for a Emacs server I have the following
 #+name: emacsclient service
@@ -237,7 +483,7 @@ fi
 if [ -z "$DISPLAY" ] || $force_tty; then
     # detect terminals with sneaky 24-bit support
     if { [ "$COLORTERM" = truecolor ] || [ "$COLORTERM" = 24bit ]; } \
-        && [ "$(tput colors 2>/dev/null)" -lt 257 ]; then
+           && [ "$(tput colors 2>/dev/null)" -lt 257 ]; then
         if echo "$TERM" | grep -q "^\w\+-[0-9]"; then
             termstub="${TERM%%-*}"; else
             termstub="${TERM#*-}"; fi
@@ -281,24 +527,20 @@ What a wonderful way to jump to buffer positions.
 #+end_src
 *** which-key
 #+begin_src emacs-lisp
-(use-package which-key)
-
-#+end_src
-** tools
-*** ace-window
-#+begin_src emacs-lisp
-(use-package ace-window)
-(global-set-key "\M-i" 'ace-window)
-(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-#+end_src
-*** eros
-TODO: can eros's overlay stay if its not covering the cursor?
-#+begin_src emacs-lisp
-(use-package eros)
-(eros-mode 1)
-(setq eros-eval-result-prefix "⟹ ") ; default =>
+(use-package which-key
+  :config
+  (which-key-mode)
+  (setq which-key-idle-delay 0.6
+	    which-key-idle-secondary-delay 0
+	    which-key-sort-order 'which-key-prefix-then-key-order
+	    ))
 #+end_src
 *** meow
+i prefer stay in insert mode, only use `normal mode' when need.
+C-space will be the key to enter and leave normal mode
+`meow-mode-state-list'
+disable meow in magit
+**** meow setup
 #+begin_src emacs-lisp
 (use-package meow)
 (defun meow-setup ()
@@ -349,7 +591,8 @@ TODO: can eros's overlay stay if its not covering the cursor?
    '("c" . meow-change)
    '("d" . meow-delete)
    '("D" . meow-backward-delete)
-   '("e" . meow-line)
+   '("e" . tu10ng/open-below)
+   '("E" . tu10ng/open-above)
    '("f" . meow-next-symbol)
    '("F" . meow-mark-symbol)
    '("g" . meow-cancel-selection)
@@ -357,7 +600,6 @@ TODO: can eros's overlay stay if its not covering the cursor?
    '("h" . meow-left)
    '("H" . meow-left-expand)
    '("i" . meow-insert)
-   '("I" . meow-open-above)
    '("j" . meow-next)
    '("J" . meow-next-expand)
    '("k" . meow-prev)
@@ -390,20 +632,58 @@ TODO: can eros's overlay stay if its not covering the cursor?
    '("\\" . quoted-insert)
    '("<escape>" . ignore)))
 
-(defun meow-insert-define-key (&rest keybindings)
-  "Define key for insert state.
+;; (defun meow-insert-define-key (&rest keybindings)
+;;   "Define key for insert state.
 
-Usage:
-  (meow-insert-define-key
-   '(\"C-<space>\" . meow-insert-exit))"
-  (mapcar (lambda (key-ref)
-            (define-key meow-insert-state-keymap
-			(kbd (car key-ref))
-			(meow--parse-def (cdr key-ref))))
-          keybindings))
+;; Usage:
+;;   (meow-insert-define-key
+;;    '(\"C-<space>\" . meow-insert-exit))"
+;;   (mapcar (lambda (key-ref)
+;;             (define-key meow-insert-state-keymap
+;; 			            (kbd (car key-ref))
+;; 			            (meow--parse-def (cdr key-ref))))
+;;           keybindings))
 
-(meow-insert-define-key
- '("C-SPC" . meow-insert-exit))
+;; (meow-insert-define-key
+;;  '("C-SPC" . meow-insert-exit))
+
+
+#+end_src
+**** cursor behave
+#+begin_src emacs-lisp
+(setq meow-mode-state-list '((authinfo-mode . insert)
+                             (beancount-mode . insert)
+                             (bibtex-mode . insert)
+                             (cider-repl-mode . insert)
+                             (cider-test-report-mode . insert)
+                             (cider-browse-spec-view-mode . motion)
+                             (cargo-process-mode . insert)
+                             (conf-mode . insert)
+                             (deadgrep-edit-mode . insert)
+                             (deft-mode . insert)
+                             (diff-mode . insert)
+                             (ediff-mode . motion)
+                             (gud-mode . insert)
+                             (haskell-interactive-mode . insert)
+                             (help-mode . insert)
+                             (json-mode . insert)
+                             (jupyter-repl-mode . insert)
+                             (mix-mode . insert)
+                             (occur-edit-mode . insert)
+                             (pass-view-mode . insert)
+                             (prog-mode . insert)
+                             (py-shell-mode . insert)
+                             (restclient-mode . insert)
+                             (telega-chat-mode . insert)
+                             (term-mode . insert)
+                             (text-mode . insert)
+                             (vterm-mode . insert)
+                             (Custom-mode . insert)))
+#+end_src
+**** meow config
+
+#+begin_src emacs-lisp
+
 
 (setq meow-use-clipboard t
       meow-visit-sanitize-completion nil
@@ -411,104 +691,114 @@ Usage:
       meow-expand-hint-remove-delay 1
       )
 
+(setq meow-cursor-type-insert '(block . 2))
 (meow-setup)
 (meow-global-mode 1)
+#+end_src
+**** meow commands
+#+begin_src emacs-lisp
 
-;; TODO M-; should enter edit mode, insert mode still block cursor, one key to change window focus
+
+;; TODO M-; should enter edit mode, insert mode still block cursor, one key to change window focus, keypad mode should default enter C-x
 ;; TODO put in seperate file and load
 (defun tu10ng/meow-find-back (n ch &optional expand)
   "Find the next N char read from minibuffer."
   (interactive "p\ncFind:")
   (let ((n (- n)))
     (let* ((case-fold-search nil)
-	   (ch-str (if (eq ch 13) "\n" (char-to-string ch)))
-	   (beg (point))
-	   end)
+	       (ch-str (if (eq ch 13) "\n" (char-to-string ch)))
+	       (beg (point))
+	       end)
       (save-mark-and-excursion
-	(setq end (search-forward ch-str nil t n)))
+	    (setq end (search-forward ch-str nil t n)))
       (if (not end)
-	  (message "char %s not found" ch-str)
-	(thread-first
-	  (meow--make-selection '(select . find)
-				beg end expand)
-	  (meow--select))
-	(setq meow--last-find ch)
-	(meow--maybe-highlight-num-positions
-	 '(meow--find-continue-backward . meow--find-continue-forward))))))
+	      (message "char %s not found" ch-str)
+	    (thread-first
+	      (meow--make-selection '(select . find)
+				                beg end expand)
+	      (meow--select))
+	    (setq meow--last-find ch)
+	    (meow--maybe-highlight-num-positions
+	     '(meow--find-continue-backward . meow--find-continue-forward))))))
+(defun tu10ng/open-below()
+  (interactive)
+  (end-of-line)
+  (open-line 1)
+  (call-interactively 'next-line 1)
+  (if (not (member major-mode '(haskell-mode org-mode literate-haskell-mode)))
+      (indent-according-to-mode)
+    (beginning-of-line)))
+
+(defun tu10ng/open-above()
+  (interactive)
+  (beginning-of-line)
+  (open-line 1)
+  (if (not (member major-mode '(haskell-mode org-mode literate-haskell-mode)))
+      (indent-according-to-mode)
+    (beginning-of-line)))
+
+(global-set-key "\C-o" 'tu10ng/open-below)
+(global-set-key "\M-o" 'tu10ng/open-above)
 
 #+end_src
-*** corfu
+*** quickrun
 #+begin_src emacs-lisp
-(use-package corfu)
-(use-package orderless)
-(use-package kind-icon)
-(use-package cape)
-(use-package corfu-doc)
+(use-package quickrun
+  :bind ("C-c r" . quickrun))
+(setq quickrun-timeout-seconds 5)
 #+end_src
-
+*** tmp key-binds
 #+begin_src emacs-lisp
-(add-hook 'lsp-completion-mode-hook
-          (lambda ()
-            (setf (alist-get 'lsp-capf completion-category-defaults) '((styles . (orderless))))))
+(global-set-key (kbd "M-l") (lambda (ARG) (interactive "p") (downcase-word (- ARG))))
+(global-set-key (kbd "M-u") (lambda (ARG) (interactive "p") (upcase-word (- ARG))))
+(global-set-key (kbd "M-c") (lambda (ARG) (interactive "p") (capitalize-word (- ARG))))
 
-(setq-default completion-in-region-function #'consult-completion-in-region)
+(global-set-key "\C-cl" #'org-store-link)
+(global-set-key "\C-ca" #'org-agenda-list)
+(global-set-key "\C-cc" #'org-capture)
 
-(use-package corfu
-  :custom
-  (corfu-separator ?\s)          ;; Orderless field separator
-  (corfu-preview-current nil)    ;; Disable current candidate preview
-  (corfu-auto nil)
-  (corfu-on-exact-match nil)
-  (corfu-quit-no-match 'separator)
-  (corfu-preselect-first nil)
-  :config
-  (global-corfu-mode)
-  :bind (:map corfu-map
-         ("SPC" . corfu-insert-separator)
-         ("TAB" . my-tab)
-         ([tab] . my-tab)
-         ;; ("TAB" . corfu-next)
-         ;; ([tab] . corfu-next)
-         ("S-TAB" . corfu-previous)
-         ([backtab] . corfu-previous)))
+(global-set-key "\C-ct" #'tldr)
+(global-set-key "\C-cm" #'man)
+(global-set-key "\C-x\C-d" #'dired)
 
-(use-package corfu-doc
-  :hook
-  (corfu-mode . corfu-doc-mode)
-  :bind (:map corfu-map
-         ("M-n" . corfu-doc-scroll-down)
-         ("M-p" . corfu-doc-scroll-up)
-         ("M-d" . corfu-doc-toggle)))
-
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
-
-(use-package kind-icon
-  :after corfu
-  :custom
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-
-(use-package cape
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  (add-to-list 'completion-at-point-functions #'cape-tex)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-keyword))
-
-(setq completion-cycle-threshold 1)
-
-(setq tab-always-indent 'complete)
+#+end_src
+** tools
+*** ace-window
+#+begin_src emacs-lisp
+(use-package ace-window)
+(global-set-key "\M-i" 'ace-window)
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+#+end_src
+*** eros
+TODO: can eros's overlay stay if its not covering the cursor?
+#+begin_src emacs-lisp
+(use-package eros)
+(eros-mode 1)
+(setq eros-eval-result-prefix "⟹ ") ; default =>
 #+end_src
 *** consult
 #+begin_src emacs-lisp
+(setq enable-recursive-minibuffers t)
+
+(use-package vertico
+  :hook (after-init . vertico-mode)
+  :config
+  (setq vertico-count 8)
+  (face-spec-set 'vertico-current
+                 '((((background light))
+                    :background "#d8d8d8" :extend t)
+                   (t
+                    :background "#454545" :extend t))
+                 'face-defface-spec))
+
+(use-package orderless
+  :config
+  (setq
+   completion-styles '(orderless)
+   completion-category-defaults nil
+   completion-category-overrides '((file (styles partial-completion)))))
+
+
 (use-package consult
   :bind (
          ("C-x b" . consult-buffer)                
@@ -534,7 +824,15 @@ Usage:
 *** magit
 #+begin_src emacs-lisp
 (use-package magit)
-
+(setq magit-commit-ask-to-stage nil)    ;don't ask stage question
+#+end_src
+setup gitignore conf
+#+begin_src emacs-lisp
+(use-package conf-mode
+  :ensure nil
+  :mode (("\\.gitignore\\'"     . conf-unix-mode)
+         ("\\.gitconfig\\'"     . conf-unix-mode)
+         ("\\.gitattributes\\'" . conf-unix-mode)))
 #+end_src
 *** magit delta
 git diff syntax highlighter written in rust.
@@ -545,5 +843,383 @@ cargo install git-delta
 (use-package magit-delta
   :hook (magit-mode . magit-delta-mode))
 #+end_src
-(org-babel-load-file "~/.emacs.d/config.org")
+*** pyim
+#+begin_src elisp
+(use-package pyim)
+(pyim-default-scheme 'quanpin)
+(setq pyim-page-length 7)
+(setq pyim-process-async-delay 0.1
+      pyim-process-run-delay 0.1)
+(setq pyim-indicator-list nil)
+(setq pyim-punctuation-dict nil)        ;disable chinese punctuation.
 
+(use-package pyim-basedict)
+(pyim-basedict-enable)
+
+(setq default-input-method "pyim")
+;; slow down pyim init speed.
+(add-to-list 'load-path "~/.emacs.d/site-lisp/pyim-tsinghua-dict")
+(require 'pyim-tsinghua-dict)
+(pyim-tsinghua-dict-enable)
+(require 'pyim-cstring-utils)
+(defun my-orderless-regexp (orig-func component)
+  (let ((result (funcall orig-func component)))
+    (pyim-cregexp-build result)))
+
+(advice-add 'orderless-regexp :around #'my-orderless-regexp)
+#+end_src
+*** flycheck
+I don't like the default error checking. Let's make.
+#+begin_src emacs-lisp
+(use-package flycheck)
+(defun init-flycheck-hook ()
+  (remove-hook 'post-command-hook 'flycheck-maybe-display-error-at-point-soon 'local)
+  (remove-hook 'focus-in-hook 'flycheck-maybe-display-error-at-point-soon 'local)
+  (remove-hook 'post-command-hook 'flycheck-display-error-at-point-soon 'local)
+  (remove-hook 'focus-in-hook 'flycheck-display-error-at-point-soon 'local)
+  )
+
+(add-hook 'flycheck-mode-hook 'init-flycheck-hook)
+#+end_src
+
+** visuals
+*** info colors, helpful
+#+begin_src emacs-lisp
+(use-package info-colors)
+(add-hook 'Info-selection-hook 'info-colors-fontify-node)
+
+(use-package helpful
+  :bind
+  ([remap describe-function] . helpful-callable)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . helpful-variable)
+  ([remap describe-key] . helpful-key))
+#+end_src
+*** paren
+#+begin_src emacs-lisp
+(use-package paren
+  :hook (after-init . show-paren-mode)
+  :init (setq show-paren-when-point-inside-paren t
+              show-paren-when-point-in-periphery t
+              show-paren-highlight-openparen t
+              show-paren-delay 0.01
+              rainbow-delimiters-max-face-count 6))
+
+(use-package rainbow-delimiters
+  :config
+  (set-face-foreground 'rainbow-delimiters-depth-1-face "gold")
+  (set-face-foreground 'rainbow-delimiters-depth-2-face "DodgerBlue1")
+  (set-face-foreground 'rainbow-delimiters-depth-3-face "lime green")
+  (set-face-foreground 'rainbow-delimiters-depth-4-face "gold")
+  (set-face-foreground 'rainbow-delimiters-depth-5-face "DodgerBlue1")
+  (set-face-foreground 'rainbow-delimiters-depth-6-face "lime green")
+  (set-face-foreground 'rainbow-delimiters-depth-7-face "gold")
+  (set-face-foreground 'rainbow-delimiters-depth-8-face "DodgerBlue1")
+  (set-face-foreground 'rainbow-delimiters-depth-9-face "lime green")
+
+  (set-face-attribute 'rainbow-delimiters-depth-1-face nil :weight 'ultra-heavy)
+  (set-face-attribute 'rainbow-delimiters-depth-2-face nil :weight 'ultra-heavy)
+  (set-face-attribute 'rainbow-delimiters-depth-3-face nil :weight 'ultra-heavy)
+  (set-face-attribute 'rainbow-delimiters-depth-4-face nil :weight 'thin)
+  (set-face-attribute 'rainbow-delimiters-depth-5-face nil :weight 'thin)
+  (set-face-attribute 'rainbow-delimiters-depth-6-face nil :weight 'thin)
+  (set-face-attribute 'rainbow-delimiters-depth-7-face nil :weight 'ultra-heavy)
+  (set-face-attribute 'rainbow-delimiters-depth-8-face nil :weight 'ultra-heavy)
+  (set-face-attribute 'rainbow-delimiters-depth-8-face nil :weight 'ultra-heavy)
+  :hook
+  ((prog-mode . rainbow-delimiters-mode)
+   (shell-mode . rainbow-delimiters-mode)
+   ;;(text-mode . rainbow-delimiters-mode)
+   ))
+#+end_src
+*** pretty symbol characters
+#+begin_src emacs-lisp
+(use-package prettify-greek)
+(use-package prettify-math)
+(setq-default prettify-symbols-alist prettify-greek-lower)
+;;(global-prettify-symbols-mode 1)
+;;(global-prettify-math-mode)
+(dolist (hook '(prog-mode-hook
+                shell-mode-hook
+                text-mode-hook))
+  (add-hook hook #'(lambda ()
+                     (prettify-symbols-mode 1))))
+#+end_src
+
+** frivolities
+*** selectric
+Every so often, you want everyone else to /know/ that you're typing, or just to
+amuse oneself. Introducing: typewriter sounds!
+#+begin_src emacs-lisp
+(use-package selectric-mode)
+
+#+end_src
+*** wakatime
+#+begin_src emacs-lisp
+(use-package wakatime-mode)
+(setq wakatime-disable-on-error t)
+(global-wakatime-mode 1)
+#+end_src
+*** rainbow cursor
+#+begin_src emacs-lisp
+(blink-cursor-mode -1)
+(set-cursor-color "gold")
+
+(defvar rainbow-cursor-timer nil)
+(setq rainbow-cursor-color-list (vector"#FF0000";red
+		                               "#FF5000"
+		                               "#FF9F00";orange
+		                               "#FFFF00";yellow
+		                               "#BFFF00"
+		                               "#00FF00";green
+		                               "#00FFFF";
+		                               "#0088FF"
+		                               "#0000FF";blue
+		                               "#5F00FF"
+		                               "#8B00FF";purple
+		                               "#CF00FF"
+		                               "#FF0088"
+		                               ))
+(setq rainbow-cursor-color-pointer 1)
+(defun rainbow-cursor-change-color ()
+  "Take a color from `rainbow-color-list' by the pointer.
+The pointer moves by +1, and restore by taking mod.  "
+  (setq rainbow-cursor-color-pointer (% (1+ rainbow-cursor-color-pointer)
+				                        (length rainbow-cursor-color-list)))
+  (set-cursor-color (elt rainbow-cursor-color-list
+                         rainbow-cursor-color-pointer)))
+
+
+(defun rainbow-cursor-disable ()
+  ""
+  (interactive)
+  (when rainbow-cursor-timer
+    (cancel-timer rainbow-cursor-timer)
+    (setq rainbow-cursor-timer nil)))
+
+(defun rainbow-cursor-enable ()
+  ""
+  (interactive)
+  (rainbow-cursor-disable)
+  (setq rainbow-cursor-timer
+        (run-with-timer 0 0.05 #'rainbow-cursor-change-color)))
+
+(rainbow-cursor-enable)
+
+#+end_src
+
+** file types
+*** systemd
+for editing systemd unit files
+#+begin_src emacs-lisp
+(use-package systemd)
+
+#+end_src
+* language confguration
+** org
+*** system wide config
+**** git diff
+Protesilaos wrote a [[https://protesilaos.com/codelog/2021-01-26-git-diff-hunk-elisp-org/][very helpful article]] in which he explains how to change the
+git diff chunk heading to something more useful than just the immediate line
+above the hunk --- like the parent heading.
+
+This can be achieved by first adding a new diff mode to git in =~/.config/git/attributes=
+#+begin_src fundamental
+,*.org   diff=org
+#+end_src
+
+Then adding a regex for it to =~/.config/git/config=
+#+begin_src gitconfig
+[diff "org"]
+  xfuncname = "^(\\*+ +.*)$"
+#+end_src
+*** packages
+**** visuals
+***** use org-modern
+#+begin_src emacs-lisp
+(use-package org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq org-modern-star ["◉" "✜" "✸" "✿" "✤" "○" "◆" "▶"]
+        org-modern-table-vertical 1
+        org-modern-table-horizontal 0.2
+        org-modern-list '((43 . "➤")
+                          (45 . "-")
+                          (42 . "•"))
+        org-modern-todo-faces
+        '(("TODO" :inverse-video t :inherit org-todo)
+          ("PROJ" :inverse-video t :inherit +org-todo-project)
+          ("STRT" :inverse-video t :inherit +org-todo-active)
+          ("[-]"  :inverse-video t :inherit +org-todo-active)
+          ("HOLD" :inverse-video t :inherit +org-todo-onhold)
+          ("WAIT" :inverse-video t :inherit +org-todo-onhold)
+          ("[?]"  :inverse-video t :inherit +org-todo-onhold)
+          ("KILL" :inverse-video t :inherit +org-todo-cancel)
+          ("NO"   :inverse-video t :inherit +org-todo-cancel))
+        org-modern-footnote
+        (cons nil (cadr org-script-display))
+        org-modern-progress nil
+        org-modern-keyword
+        '((t . t)
+          ("title" . "𝙏")
+          ("subtitle" . "𝙩")
+          ("author" . "𝘼")
+          ("email" . #("" 0 1 (display (raise -0.14))))
+          ("date" . "𝘿")
+          ("property" . "☸")
+          ("options" . "⌥")
+          ("startup" . "⏻")
+          ("macro" . "𝓜")
+          ("bind" . #("" 0 1 (display (raise -0.1))))
+          ("bibliography" . "")
+          ("print_bibliography" . #("" 0 1 (display (raise -0.1))))
+          ("cite_export" . "⮭")
+          ("import" . "⇤")
+          ("setupfile" . "⇚")
+          ("html_head" . "🅷")
+          ("html" . "🅗")
+          ("latex_class" . "🄻")
+          ("latex_class_options" . #("🄻" 1 2 (display (raise -0.14))))
+          ("latex_header" . "🅻")
+          ("latex_header_extra" . "🅻⁺")
+          ("latex" . "🅛")
+          ("beamer_theme" . "🄱")
+          ("beamer_color_theme" . #("🄱" 1 2 (display (raise -0.12))))
+          ("beamer_font_theme" . "🄱𝐀")
+          ("beamer_header" . "🅱")
+          ("beamer" . "🅑")
+          ("attr_latex" . "🄛")
+          ("attr_html" . "🄗")
+          ("attr_org" . "⒪")
+          ("call" . #("" 0 1 (display (raise -0.15))))
+          ("name" . "⁍")
+          ("header" . "›")
+          ("caption" . "☰")
+          ("RESULTS" . "🠶"))))
+#+end_src
+***** emphasis markers
+While ~org-hide-emphasis-markers~ is very nice, it can sometimes make edits which
+occur at the border a bit more fiddley. We can improve this situation without
+sacrificing visual amenities with the =org-appear= package.
+#+begin_src emacs-lisp
+(use-package org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autosubmarkers t
+        org-appear-autolinks nil)
+  ;; for proper first-time setup, `org-appear--set-elements'
+  ;; needs to be run after other hooks have acted.
+  (run-at-time nil nil #'org-appear--set-elements))
+#+end_src
+***** =Valign= for Org Mode tables
+Use [[https://github.com/casouri/valign][valign]] for tables alignments.
+#+begin_src emacs-lisp
+(use-package valign
+  :hook
+  (org-mode . valign-mode)
+  (markdown-mode . valign-mode)
+  :config
+  (setq valign-fancy-bar 1)
+  )
+#+end_src
+**** extra functionality
+*** behaviour
+**** tweaking defaults
+#+begin_src emacs-lisp
+(setq org-directory "~/org"
+      org-use-property-inheritance t
+      org-log-done 'time
+      org-list-allow-alphabetical t
+      org-export-in-background t
+      org-catch-invisible-edits 'smart
+      org-export-with-sub-superscripts '{} ;?
+      org-export-allow-bind-keywords t
+      org-image-actual-width '(0.8)
+      org-footnote-auto-adjust t)
+#+end_src
+**** extra functionality
+***** List bullet sequence
+I think it makes sense to have list bullets change with depth
+#+begin_src emacs-lisp
+(setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
+#+end_src
+***** super agenda
+#+begin_src emacs-lisp
+(use-package org-super-agenda)
+(org-super-agenda-mode 1)
+
+#+end_src
+***** capture
+~doct~ (declarative org capture templates)
+#+begin_src 
+(use-package doct)
+
+#+end_src
+*** visuals
+**** font display
+
+#+begin_src emacs-lisp
+(setq org-edit-src-content-indentation 0)
+(setq org-startup-indented t)
+#+end_src
+It seems reasonable to have deadlines in the error face when they're passed.
+#+begin_src emacs-lisp
+(setq org-agenda-deadline-faces
+      '((1.01 . error)
+        (1.0 . org-warning)
+        (0.5 . org-upcoming-deadline)
+        (0.0 . org-upcoming-distant-deadline)))
+#+end_src
+We can then have quote blocks stand out a bit more by making them /italic/.
+#+begin_src emacs-lisp
+(setq org-fontify-quote-and-verse-blocks t)
+#+end_src
+
+Org files can be rather nice to look at, particularly with some of the
+customisations here. This comes at a cost however, expensive font-lock.
+Feeling like you're typing through molasses in large files is no fun, but there
+is a way I can defer font-locking when typing to make the experience more
+responsive.
+#+begin_src emacs-lisp
+(defun locally-defer-font-lock ()
+  "Set jit-lock defer and stealth, when buffer is over a certain size."
+  (when (> (buffer-size) 50000)
+    (setq-local jit-lock-defer-time 0.05
+                jit-lock-stealth-time 1
+                org-indent-mode nil)))
+
+(add-hook 'org-mode-hook #'locally-defer-font-lock)
+#+end_src
+Apparently this causes issues with some people, but I haven't noticed anything
+problematic beyond the expected slight delay in some fontification, so until I
+do I'll use the above.
+**** symbols
+#+begin_src emacs-lisp
+(setq org-ellipsis " ▾ "
+      org-hide-leading-stars t
+      org-priority-faces
+      '((?A . 'all-the-icons-red)
+        (?B . 'all-the-icons-orange)
+        (?C . 'all-the-icons-yellow)
+        (?D . 'all-the-icons-green)
+        (?E . 'all-the-icons-blue)))
+#+end_src
+**** latex
+*** exporting
+**** general settings
+*** reveal
+By default reveal is rather nice, there are just a few tweaks that I consider a
+good idea.
+vpn may cause this fail!
+#+begin_src emacs-lisp
+(use-package ox-reveal)
+(setq org-re-reveal-theme "white"
+      org-re-reveal-transition "slide"
+      ;; org-re-reveal-plugins '(markdown notes math search zoom)
+      org-reveal-root "/home/qb/Downloads/reveal.js-4.4.0/")
+#+end_src
+
+
+
+(org-babel-load-file "~/.emacs.d/config.org")

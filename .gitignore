@@ -2,3 +2,10 @@
 *~
 /config.el
 /elpa/
+/transient/
+/pyim/
+/history
+/places
+/recentf
+/url/
+/site-lisp/
