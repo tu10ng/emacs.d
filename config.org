@@ -1,0 +1,549 @@
+#+PROPERTY: header-args :results output none
+* rudimentary configuration
+#+begin_src emacs-lisp :comments no
+  (require 'org-tempo)
+#+end_src
+
+** Personal information
+#+begin_src emacs-lisp
+  (setq user-full-name "tu10ng"
+	user-mail-address "2059734099@qq.com")
+#+end_src
+
+** Workaround
+it should be empty in the best scenario
+#+begin_src emacs-lisp
+(setq native-comp-async-jobs-number 20)
+(setq org-edit-src-content-indentation 0)
+(setq org-startup-indented t)
+
+
+#+end_src
+
+Test some package
+#+begin_src emacs-lisp
+
+#+end_src
+
+** better defaults
+*** simple settings
+[[https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org#use-better-defaults][angrybacon/dotemacs]]
+#+begin_src emacs-lisp
+  (setq-default
+   delete-by-moving-to-trash t                      ; Delete files to trash
+   window-combination-resize t                      ; take new window space from all other windows (not just current)
+   x-stretch-cursor t                               ; Stretch cursor to the glyph width
+  )
+
+  (setq undo-limit 80000000                         ; Raise undo-limit to 80Mb
+	auto-save-default t                         ; Nobody likes to lose work, I certainly don't
+	truncate-string-ellipsis "…"                ; Unicode ellispis are nicer than "...", and also save /precious/ space
+	password-cache-expiry nil                   ; I can trust my computers ... can't I?
+	scroll-preserve-screen-position 'always     ; Don't have `point' jump around
+	scroll-margin 2                             ; It's nice to maintain a little margin
+	word-wrap-by-category t                     ; Different languages live together happily
+	warning-minimum-level  :error               ; Who cares about warnings?
+	org-return-follows-link t)                  ; Organize it!
+
+  (global-subword-mode 1)                           ; Iterate through CamelCase words
+
+  (global-visual-line-mode 1)                       ; Wrap lines at window edge, not at 80th character: my screen is wide enough!
+
+  (scroll-bar-mode)                                 ; I like scroll bars
+#+end_src
+*** frame sizing
+#+begin_src emacs-lisp
+(push  '(alpha-background . 95) default-frame-alist)
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+#+end_src
+*** auto-customizations
+change though customisation interface will not add to =init.el=.
+#+begin_src emacs-lisp
+    (setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
+  (when (file-exists-p custom-file)
+    (load custom-file))
+#+end_src
+
+*** window
+??? find file other window
+
+*** mouse ???to fast
+Thanks to Po Lu, scrolling in emacs is great again!
+#+begin_src emacs-lisp
+(pixel-scroll-precision-mode 1)
+(setq pixel-scroll-precision-large-scroll-height 60
+      pixel-scroll-precision-interpolation-factor 4.0)
+#+end_src
+
+*** Drag text from emacs to other apps
+Thanks to Po Lu!
+#+begin_src emacs-lisp
+ (setq
+  mouse-drag-and-drop-region-cross-program t
+  mouse-drag-and-drop-region t)
+#+end_src
+** emacs configuration
+*** modules
+**** interface
+#+begin_src emacs-lisp
+  ;; (dolist (module '(company vertico hl-todo))
+  ;;   (use-package module))
+  (use-package vertico)
+  (use-package hl-todo)
+#+end_src
+**** language support
+#+begin_src emacs-lisp
+  (use-package systemd)
+
+#+end_src
+**** everything in emacs
+*** visual settings
+**** font
+#+begin_src emacs-lisp
+(set-face-attribute 'default nil :font "Source Code Pro:pixelsize=23")
+
+#+end_src
+**** theme
+loading theme is remarkably slow
+#+begin_src emacs-lisp
+(load-theme 'tango-dark)
+
+#+end_src
+**** modeline
+**** misc
+*** helper macros
+*** babel
+#+begin_src emacs-lisp
+  (setq org-confirm-babel-evaluate nil)
+
+#+end_src
+** other thins
+*** editor interaction
+*** system daemon
+For running a systemd service for a Emacs server I have the following
+#+name: emacsclient service
+#+begin_src systemd :tangle ~/.config/systemd/user/emacs.service :mkdirp yes
+[Unit]
+Description=Emacs server daemon
+Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
+
+[Service]
+Type=forking
+ExecStart=sh -c 'emacs --daemon && emacsclient -c --eval "(delete-frame)"'
+ExecStop=/usr/bin/emacsclient --no-wait --eval "(progn (setq kill-emacs-hook nil) (kill emacs))"
+Restart=on-failure
+Environment=COLORTERM=truecolor
+
+[Install]
+WantedBy=default.target
+#+end_src
+which is then enabled by
+#+begin_src shell :tangle (if (string= "enabled\n" (shell-command-to-string "systemctl --user is-enabled emacs.service")) "no" "setup.sh")
+systemctl --user disable emacs.service
+#+end_src
+
+For some reason if a frame isn't opened early in the initialisation process, the
+daemon doesn't seem to like opening frames later --- hence the ~&& emacsclient~
+part of the =ExecStart= value.
+It can now be nice to use this as a 'default app' for opening files. If we add
+an appropriate desktop entry, and enable it in the desktop environment.
+
+#+begin_src conf :tangle ~/.local/share/applications/emacs-client.desktop :mkdirp yes
+[Desktop Entry]
+Name=Emacs client
+GenericName=Text Editor
+Comment=A flexible platform for end-user applications
+MimeType=text/english;text/plain;text/x-makefile;text/x-c++hdr;text/x-c++src;text/x-chdr;text/x-csrc;text/x-java;text/x-moc;text/x-pascal;text/x-tcl;text/x-tex;application/x-shellscript;text/x-c;text/x-c++;
+Exec=emacsclient -create-frame --alternate-editor="" --no-wait %F
+Icon=emacs
+Type=Application
+Terminal=false
+Categories=TextEditor;Utility;
+StartupWMClass=Emacs
+Keywords=Text;Editor;
+X-KDE-StartupNotify=false
+#+end_src
+*** Emacs client wrapper
+I frequently want to make use of Emacs while in a terminal emulator. To make
+this easier, I can construct a few handy aliases.
+
+However, a little convenience script in =~/.local/bin= can have the same effect,
+be available beyond the specific shell I plop the alias in, then also allow me
+to add a few bells and whistles --- namely:
++ Accepting stdin by putting it in a temporary file and immediately opening it.
++ Guessing that the =tty= is a good idea when ~$DISPLAY~ is unset (relevant with SSH
+  sessions, among other things).
++ With a whiff of 24-bit color support, sets ~TERM~ variable to a =terminfo= that
+  (probably) announces 24-bit color support.
++ Changes GUI =emacsclient= instances to be non-blocking by default (~--no-wait~),
+  and instead take a flag to suppress this behaviour (~-w~).
+
+I would use =sh=, but using arrays for argument manipulation is just too
+convenient, so I'll raise the requirement to =bash=. Since arrays are the only
+'extra' compared to =sh=, other shells like =ksh= etc. should work too.
+
+#+name: e
+#+begin_src shell :tangle ~/.local/bin/e :mkdirp yes :tangle-mode (identity #o755) :comments no
+#!/usr/bin/env bash
+force_tty=false
+force_wait=false
+stdin_mode=""
+
+args=()
+
+while :; do
+    case "$1" in
+        -t | -nw | --tty)
+            force_tty=true
+            shift ;;
+        -w | --wait)
+            force_wait=true
+            shift ;;
+        -m | --mode)
+            stdin_mode=" ($2-mode)"
+            shift 2 ;;
+        -h | --help)
+            echo -e "\033[1mUsage: e [-t] [-m MODE] [OPTIONS] FILE [-]\033[0m
+
+Emacs client convenience wrapper.
+
+\033[1mOptions:\033[0m
+\033[0;34m-h, --help\033[0m            Show this message
+\033[0;34m-t, -nw, --tty\033[0m        Force terminal mode
+\033[0;34m-w, --wait\033[0m            Don't supply \033[0;34m--no-wait\033[0m to graphical emacsclient
+\033[0;34m-\033[0m                     Take \033[0;33mstdin\033[0m (when last argument)
+\033[0;34m-m MODE, --mode MODE\033[0m  Mode to open \033[0;33mstdin\033[0m with
+
+Run \033[0;32memacsclient --help\033[0m to see help for the emacsclient."
+            exit 0 ;;
+        --*=*)
+            set -- "$@" "${1%%=*}" "${1#*=}"
+            shift ;;
+        ,*)
+            if [ "$#" = 0 ]; then
+                break; fi
+            args+=("$1")
+            shift ;;
+    esac
+done
+
+if [ ! "${#args[*]}" = 0 ] && [ "${args[-1]}" = "-" ]; then
+    unset 'args[-1]'
+    TMP="$(mktemp /tmp/emacsstdin-XXX)"
+    cat > "$TMP"
+    args+=(--eval "(let ((b (generate-new-buffer \"*stdin*\"))) (switch-to-buffer b) (insert-file-contents \"$TMP\") (delete-file \"$TMP\")${stdin_mode})")
+fi
+
+if [ -z "$DISPLAY" ] || $force_tty; then
+    # detect terminals with sneaky 24-bit support
+    if { [ "$COLORTERM" = truecolor ] || [ "$COLORTERM" = 24bit ]; } \
+        && [ "$(tput colors 2>/dev/null)" -lt 257 ]; then
+        if echo "$TERM" | grep -q "^\w\+-[0-9]"; then
+            termstub="${TERM%%-*}"; else
+            termstub="${TERM#*-}"; fi
+        if infocmp "$termstub-direct" >/dev/null 2>&1; then
+            TERM="$termstub-direct"; else
+            TERM="xterm-direct"; fi # should be fairly safe
+    fi
+    emacsclient --tty -create-frame --alternate-editor="" "${args[@]}"
+else
+    if ! $force_wait; then
+        args+=(--no-wait); fi
+    emacsclient -create-frame --alternate-editor="" "${args[@]}"
+fi
+#+end_src
+Now, to set an alias to use =e= with magit, and then for maximum laziness we can
+set aliases for the terminal-forced variants.
+#+begin_src shell :tangle no
+alias m='e --eval "(progn (magit-status) (delete-other-windows))"'
+alias mt="m -t"
+alias et="e -t"
+#+end_src
+* packages
+** INTRUCTIONS
+This is where you install packages.
+This file shouldn't be byte compiled. TODO: why?
+begin_src emacs-lisp :tangle "packages.el" :comments no
+;; -*- no-byte-compile: t; -*-
+end_src
+*** package in melpa/elpa/emacsmirror
+#+begin_src emacs-lisp
+
+#+end_src
+*** package from git repo
+** convenience
+*** avy
+What a wonderful way to jump to buffer positions.
+#+begin_src emacs-lisp
+(use-package avy)
+(setq avy-all-windows t)
+(global-set-key (kbd "C-;") 'avy-goto-char-2)
+#+end_src
+*** which-key
+#+begin_src emacs-lisp
+(use-package which-key)
+
+#+end_src
+** tools
+*** ace-window
+#+begin_src emacs-lisp
+(use-package ace-window)
+(global-set-key "\M-i" 'ace-window)
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+#+end_src
+*** eros
+TODO: can eros's overlay stay if its not covering the cursor?
+#+begin_src emacs-lisp
+(use-package eros)
+(eros-mode 1)
+(setq eros-eval-result-prefix "⟹ ") ; default =>
+#+end_src
+*** meow
+#+begin_src emacs-lisp
+(use-package meow)
+(defun meow-setup ()
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-motion-overwrite-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev)
+   '("<escape>" . ignore))
+  (meow-leader-define-key
+   ;; SPC j/k will run the original command in MOTION state.
+   '("j" . "H-j")
+   '("k" . "H-k")
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("0" . meow-digit-argument)
+   '("/" . meow-keypad-describe-key)
+   '("?" . meow-cheatsheet))
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("-" . negative-argument)
+   '(";" . meow-reverse)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("(" . meow-beginning-of-thing)
+   '(")" . meow-end-of-thing)
+   '("/" . meow-visit)
+   '("a" . meow-append)
+   '("A" . meow-join)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-change)
+   '("d" . meow-delete)
+   '("D" . meow-backward-delete)
+   '("e" . meow-line)
+   '("f" . meow-next-symbol)
+   '("F" . meow-mark-symbol)
+   '("g" . meow-cancel-selection)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("i" . meow-insert)
+   '("I" . meow-open-above)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("m" . meow-mark-word)
+   '("M" . meow-mark-symbol)
+   '("n" . meow-search)
+   '("o" . meow-block)
+   '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("P" . pop-to-mark-command)
+   '("q" . meow-quit)
+   '("r" . meow-replace)
+   '("R" . meow-swap-grab)
+   '("s" . meow-find)
+   '("S" . tu10ng/meow-find-back)
+   '("t" . meow-till)
+   '("u" . meow-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-grab)
+   '("w" . meow-kill)
+   '("x" . meow-line)
+   '("X" . meow-line-expand)
+   '("y" . meow-save)
+   '("Y" . meow-sync-grab)
+   '("z" . meow-pop-selection)
+   '("'" . repeat)
+   '("\\" . quoted-insert)
+   '("<escape>" . ignore)))
+
+(defun meow-insert-define-key (&rest keybindings)
+  "Define key for insert state.
+
+Usage:
+  (meow-insert-define-key
+   '(\"C-<space>\" . meow-insert-exit))"
+  (mapcar (lambda (key-ref)
+            (define-key meow-insert-state-keymap
+			(kbd (car key-ref))
+			(meow--parse-def (cdr key-ref))))
+          keybindings))
+
+(meow-insert-define-key
+ '("C-SPC" . meow-insert-exit))
+
+(setq meow-use-clipboard t
+      meow-visit-sanitize-completion nil
+      meow-expand-exclude-mode-list nil
+      meow-expand-hint-remove-delay 1
+      )
+
+(meow-setup)
+(meow-global-mode 1)
+
+;; TODO M-; should enter edit mode, insert mode still block cursor, one key to change window focus
+;; TODO put in seperate file and load
+(defun tu10ng/meow-find-back (n ch &optional expand)
+  "Find the next N char read from minibuffer."
+  (interactive "p\ncFind:")
+  (let ((n (- n)))
+    (let* ((case-fold-search nil)
+	   (ch-str (if (eq ch 13) "\n" (char-to-string ch)))
+	   (beg (point))
+	   end)
+      (save-mark-and-excursion
+	(setq end (search-forward ch-str nil t n)))
+      (if (not end)
+	  (message "char %s not found" ch-str)
+	(thread-first
+	  (meow--make-selection '(select . find)
+				beg end expand)
+	  (meow--select))
+	(setq meow--last-find ch)
+	(meow--maybe-highlight-num-positions
+	 '(meow--find-continue-backward . meow--find-continue-forward))))))
+
+#+end_src
+*** corfu
+#+begin_src emacs-lisp
+(use-package corfu)
+(use-package orderless)
+(use-package kind-icon)
+(use-package cape)
+(use-package corfu-doc)
+#+end_src
+
+#+begin_src emacs-lisp
+(add-hook 'lsp-completion-mode-hook
+          (lambda ()
+            (setf (alist-get 'lsp-capf completion-category-defaults) '((styles . (orderless))))))
+
+(setq-default completion-in-region-function #'consult-completion-in-region)
+
+(use-package corfu
+  :custom
+  (corfu-separator ?\s)          ;; Orderless field separator
+  (corfu-preview-current nil)    ;; Disable current candidate preview
+  (corfu-auto nil)
+  (corfu-on-exact-match nil)
+  (corfu-quit-no-match 'separator)
+  (corfu-preselect-first nil)
+  :config
+  (global-corfu-mode)
+  :bind (:map corfu-map
+         ("SPC" . corfu-insert-separator)
+         ("TAB" . my-tab)
+         ([tab] . my-tab)
+         ;; ("TAB" . corfu-next)
+         ;; ([tab] . corfu-next)
+         ("S-TAB" . corfu-previous)
+         ([backtab] . corfu-previous)))
+
+(use-package corfu-doc
+  :hook
+  (corfu-mode . corfu-doc-mode)
+  :bind (:map corfu-map
+         ("M-n" . corfu-doc-scroll-down)
+         ("M-p" . corfu-doc-scroll-up)
+         ("M-d" . corfu-doc-toggle)))
+
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
+
+(use-package kind-icon
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  (add-to-list 'completion-at-point-functions #'cape-tex)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-keyword))
+
+(setq completion-cycle-threshold 1)
+
+(setq tab-always-indent 'complete)
+#+end_src
+*** consult
+#+begin_src emacs-lisp
+(use-package consult
+  :bind (
+         ("C-x b" . consult-buffer)                
+         ("M-y" . consult-yank-pop)                
+         ("M-g g" . consult-goto-line)             
+         )
+  :hook (completion-list-mode . consult-preview-at-point-mode)
+  :init
+  (setq consult-async-refresh-delay 0.01)
+  (setq register-preview-delay 0.01
+        register-preview-function #'consult-register-format)
+  (advice-add #'register-preview :override #'consult-register-window)
+  :custom
+  (consult-async-min-input 2)
+  (consult-async-refresh-delay 0.01)
+  (consult-async-input-throttle 0.2)
+  (consult-async-input-debounce 0.1)
+  )
+
+
+#+end_src
+
+*** magit
+#+begin_src emacs-lisp
+(use-package magit)
+
+#+end_src
+*** magit delta
+git diff syntax highlighter written in rust.
+#+begin_src shell
+cargo install git-delta
+#+end_src
+#+begin_src emacs-lisp
+(use-package magit-delta
+  :hook (magit-mode . magit-delta-mode))
+#+end_src
+(org-babel-load-file "~/.emacs.d/config.org")
+
