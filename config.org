@@ -1,4 +1,8 @@
 #+PROPERTY: header-args :results output none
+* some words
+config mainly based on [[https://github.com/VitalyAnkh/config][@VitalyAnkh emacs config]]
+please do not reward me credits when fetching snippets from my config.
+
 * rudimentary configuration
 #+begin_src emacs-lisp :comments no
 (require 'org-tempo)
