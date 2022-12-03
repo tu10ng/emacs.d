@@ -272,6 +272,11 @@ corfu will not be tangled with move commands
 (global-corfu-mode 1)
 
 #+end_src
+****** cape
+#+begin_src emacs-lisp
+(use-package cape)
+(add-to-list 'completion-at-point-functions #'cape-file)
+#+end_src
 
 ***** vertico
 ****** vertico common
@@ -288,8 +293,7 @@ corfu will not be tangled with move commands
                  'face-defface-spec))
 
 ;; persist history over emacs restarts.
-(use-package savehist
-  :init (savehist-mode))
+(savehist-mode 1)
 
 ;; Add prompt indicator to `completing-read-multiple'.
 ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
