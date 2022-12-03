@@ -335,7 +335,11 @@ delete directory name in one go
 (add-to-list 'completion-category-overrides '((eglot (styles orderless))))
 
 (use-package consult-eglot)
-(dolist (hook '(prog-mode-hook))
+(dolist (hook '(c-mode-common-hook
+                fish-mode-hook
+                shell-mode-hook
+                html-mode-hook
+                ))
   (add-hook hook #'eglot-ensure))
 #+end_src
 **** language support
