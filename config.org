@@ -1202,10 +1202,17 @@ I think it makes sense to have list bullets change with depth
 
 #+end_src
 ***** capture
-~doct~ (declarative org capture templates)
-#+begin_src 
+****** doct (declarative org capture templates)
+#+begin_src emacs-lisp
 (use-package doct)
 
+(setq org-capture-templates
+      (doct '(("gtd"
+               :keys "g"
+               :file "~/org/gtd.org"
+               :prepend t
+               :immediate-finish t
+               :template ("* %^{gtd?}")))))
 #+end_src
 *** visuals
 **** font display
