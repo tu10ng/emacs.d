@@ -228,11 +228,16 @@ Thanks to Po Lu!
 #+begin_src emacs-lisp
 (use-package orderless)
 
-(setq completion-styles '(orderless initials partial-completion substring basic))
+(setq completion-styles '(orderless partial-completion basic))
 
 (setq completion-category-defaults nil)
-(add-to-list 'completion-category-overrides '((file (styles partial-completion))))
 
+(setq orderless-matching-styles '(orderless-literal
+                                  orderless-regexp
+                                  orderless-flex
+                                  orderless-initialism
+                                  orderless-prefixes))
+                                  
 #+end_src
 ***** capf
 ****** corfu
