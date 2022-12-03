@@ -108,7 +108,6 @@ change though customisation interface will not add to =init.el=.
 (use-package all-the-icons)
 
 #+end_src
-
 *** window
 **** split default
 #+begin_src emacs-lisp
@@ -227,24 +226,38 @@ Thanks to Po Lu!
 ** emacs configuration
 *** modules
 **** interface
-***** capf
-****** corfu
-space as separator is useful
+***** orderless
 #+begin_src emacs-lisp
 (use-package orderless)
 
+(setq completion-styles '(orderless initials partial-completion substring basic))
+
+(setq completion-category-defaults nil)
+(add-to-list 'completion-category-overrides '((file (styles partial-completion))))
+
+#+end_src
+***** capf
+****** corfu
+only use TAB and S-TAB to select candidate and auto insert
+corfu will not be tangled with move commands
+#+begin_src emacs-lisp
 (setq tab-always-indent 'complete)
 
 (use-package corfu
   :bind
   (:map corfu-map
    ([remap next-line] . nil)
-   ([remap previous-line] . previous-line)
+   ([remap previous-line] . nil)
+   ([remap newline] . nil)
+   ("RET" . nil)
+   ([ret] . nil)
+   ("M-p" . nil)
+   ("M-n" . nil)
    ("TAB" . corfu-next)
    ([tab] . corfu-next)
    ("S-TAB" . corfu-previous)
    ([backtab] . corfu-previous)))
-
+ 
 (setq corfu-auto t
       corfu-quit-no-match t
       corfu-auto-delay 0
@@ -253,23 +266,74 @@ space as separator is useful
       corfu-preselect-first nil
       )
 
-(defun orderless-fast-dispatch (word index total)
-  (and (= index 0) (= total 1) (length< word 4)
-       `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
-
-(orderless-define-completion-style orderless-fast
-  (orderless-style-dispatchers '(orderless-fast-dispatch))
-  (orderless-matching-styles '(orderless-literal orderless-regexp)))
-
-(setq completion-styles '(orderless-fast))
-
 (global-corfu-mode 1)
 
+#+end_src
+
+***** vertico
+****** vertico common
+#+begin_src emacs-lisp
+(use-package vertico
+  :hook (after-init . vertico-mode)
+  :config
+  (setq vertico-count 15)
+  (face-spec-set 'vertico-current
+                 '((((background light))
+                    :background "#d8d8d8" :extend t)
+                   (t
+                    :background "#454545" :extend t))
+                 'face-defface-spec))
+
+;; persist history over emacs restarts.
+(use-package savehist
+  :init (savehist-mode))
+
+;; Add prompt indicator to `completing-read-multiple'.
+;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+(defun crm-indicator (args)
+  (cons (format "[CRM%s] %s"
+                (replace-regexp-in-string
+                 "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                 crm-separator)
+                (car args))
+        (cdr args)))
+(advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+;; Do not allow the cursor in the minibuffer prompt
+(setq minibuffer-prompt-properties
+      '(read-only t cursor-intangible t face minibuffer-prompt))
+(add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+(setq read-extended-command-predicate
+      #'command-completion-default-include-p)
+(setq enable-recursive-minibuffers t)
+#+end_src
+
+****** vertico-directory
+delete directory name in one go
+#+begin_src emacs-lisp
+(use-package vertico-directory
+  :after vertico
+  :ensure nil
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+#+end_src
+
+****** Rich annotation
+#+begin_src emacs-lisp
+(use-package marginalia)
+(marginalia-mode)
 #+end_src
 
 ***** lsp
 #+begin_src emacs-lisp
 (use-package eglot)
+(add-to-list 'completion-category-overrides '((eglot (styles orderless))))
+
 (use-package consult-eglot)
 (dolist (hook '(prog-mode-hook))
   (add-hook hook #'eglot-ensure))
@@ -331,11 +395,6 @@ if the buffer isn't a file, simply restart emacs."
 ;; Back to the previous position
 (use-package saveplace
   :hook (after-init . save-place-mode))
-
-;; persist history over emacs restarts.
-(use-package savehist
-  :init (savehist-mode))
-
 
 #+end_src
 *** recent file
@@ -534,10 +593,9 @@ What a wonderful way to jump to buffer positions.
 	    ))
 #+end_src
 *** meow
-i prefer stay in insert mode, only use `normal mode' when need.
-C-space will be the key to enter and leave normal mode
-`meow-mode-state-list'
-disable meow in magit
+i prefer stay in insert mode
+we treat meow as mode to manipulate text, with advantage of more keys provided than other package which usage complex kebindings which is hard to remember.
+Esc will be used to enter & leave normal mode
 **** meow setup
 #+begin_src emacs-lisp
 (use-package meow)
@@ -582,7 +640,7 @@ disable meow in magit
    '("(" . meow-beginning-of-thing)
    '(")" . meow-end-of-thing)
    '("/" . meow-visit)
-   '("a" . meow-append)
+   ;; '("a" . meow-append)
    '("A" . meow-join)
    '("b" . meow-back-word)
    '("B" . meow-back-symbol)
@@ -597,7 +655,7 @@ disable meow in magit
    '("G" . meow-grab)
    '("h" . meow-left)
    '("H" . meow-left-expand)
-   '("i" . meow-insert)
+   ;; '("i" . meow-insert)
    '("j" . meow-next)
    '("J" . meow-next-expand)
    '("k" . meow-prev)
@@ -628,7 +686,7 @@ disable meow in magit
    '("z" . meow-pop-selection)
    '("'" . repeat)
    '("\\" . quoted-insert)
-   '("<escape>" . ignore)))
+   '("<escape>" . meow-insert)))
 
 ;; (defun meow-insert-define-key (&rest keybindings)
 ;;   "Define key for insert state.
@@ -643,24 +701,25 @@ disable meow in magit
 ;;           keybindings))
 
 ;; (meow-insert-define-key
-;;  '("C-SPC" . meow-insert-exit))
+;;  '("ESC" . meow-insert-exit))
 
 
 #+end_src
 **** cursor behave
 #+begin_src emacs-lisp
 (setq meow-mode-state-list '((authinfo-mode . insert)
+                             (magit-mode . insert)
                              (beancount-mode . insert)
                              (bibtex-mode . insert)
                              (cider-repl-mode . insert)
                              (cider-test-report-mode . insert)
-                             (cider-browse-spec-view-mode . motion)
+                             (cider-browse-spec-view-mode . insert)
                              (cargo-process-mode . insert)
                              (conf-mode . insert)
                              (deadgrep-edit-mode . insert)
                              (deft-mode . insert)
                              (diff-mode . insert)
-                             (ediff-mode . motion)
+                             (ediff-mode . insert)
                              (gud-mode . insert)
                              (haskell-interactive-mode . insert)
                              (help-mode . insert)
@@ -771,37 +830,12 @@ disable meow in magit
 (global-set-key "\C-cm" #'man)
 (global-set-key "\C-x\C-d" #'dired)
 
+(global-set-key "\M-p" #'backward-paragraph)
+(global-set-key "\M-n" #'forward-paragraph)
 #+end_src
 ** tools
-*** eros
-TODO: can eros's overlay stay if its not covering the cursor?
-#+begin_src emacs-lisp
-(use-package eros)
-(eros-mode 1)
-(setq eros-eval-result-prefix "⟹ ") ; default =>
-#+end_src
 *** consult
 #+begin_src emacs-lisp
-(setq enable-recursive-minibuffers t)
-
-(use-package vertico
-  :hook (after-init . vertico-mode)
-  :config
-  (setq vertico-count 8)
-  (face-spec-set 'vertico-current
-                 '((((background light))
-                    :background "#d8d8d8" :extend t)
-                   (t
-                    :background "#454545" :extend t))
-                 'face-defface-spec))
-
-(use-package orderless
-  :config
-  (setq
-   completion-styles '(orderless)
-   completion-category-defaults nil
-   completion-category-overrides '((file (styles partial-completion)))))
-
 (global-unset-key "\C-s")
 (use-package consult
   :bind (
@@ -823,10 +857,15 @@ TODO: can eros's overlay stay if its not covering the cursor?
   (consult-async-input-throttle 0.2)
   (consult-async-input-debounce 0.1)
   )
-
-
 #+end_src
 
+*** eros
+TODO: can eros's overlay stay if its not covering the cursor?
+#+begin_src emacs-lisp
+(use-package eros)
+(eros-mode 1)
+(setq eros-eval-result-prefix "⟹ ") ; default =>
+#+end_src
 *** magit
 #+begin_src emacs-lisp
 (use-package magit)
