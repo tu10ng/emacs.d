@@ -234,7 +234,7 @@ Thanks to Po Lu!
 
 (setq orderless-matching-styles '(orderless-literal
                                   orderless-regexp
-                                  orderless-flex
+                                  ;; orderless-flex
                                   orderless-initialism
                                   orderless-prefixes))
                                   
@@ -882,8 +882,10 @@ TODO: can eros's overlay stay if its not covering the cursor?
 *** magit
 #+begin_src emacs-lisp
 (use-package magit)
-(setq magit-commit-ask-to-stage nil)    ;don't ask stage question
+(setq magit-commit-ask-to-stage nil)
+(add-to-list 'magit-no-confirm 'stage-all-changes)
 #+end_src
+
 setup gitignore conf
 #+begin_src emacs-lisp
 (use-package conf-mode
