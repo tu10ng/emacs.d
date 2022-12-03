@@ -45,7 +45,9 @@ Test some package
       truncate-string-ellipsis "…"
       password-cache-expiry nil   
       scroll-preserve-screen-position 'always 
-      scroll-margin 2                         
+      scroll-margin 0
+      scroll-conservatively 0
+      kill-whole-line t
       word-wrap-by-category t  
       warning-minimum-level  :error 
       org-return-follows-link t
@@ -204,11 +206,13 @@ recommend use with vc to avoid accident lost.
 #+begin_src emacs-lisp
 (add-to-list 'load-path "~/.emacs.d/site-lisp/auto-save/") ; add auto-save to your load-path
 (require 'auto-save)
+(setq auto-save-idle 0.5)
+(setq auto-save-silent t)
+(setq auto-save-delete-trailing-whitespace nil)
+
 (auto-save-enable)
 (add-hook 'makefile-mode-hook #'(lambda () (fset 'makefile-warn-suspicious-lines 'ignore)))
 
-(setq auto-save-silent t)   ; quietly save
-(setq auto-save-delete-trailing-whitespace nil)  ; automatically delete spaces at the end of the line when saving
 
 
 #+end_src
@@ -227,50 +231,40 @@ Thanks to Po Lu!
 ****** corfu
 space as separator is useful
 #+begin_src emacs-lisp
-(use-package corfu
-  :custom
-  (corfu-auto t)
-  (corfu-auto-delay 0)
-  :config
-  (global-corfu-mode)
-  :bind (:map corfu-map
-              ("SPC" . corfu-insert-separator)
-              ("TAB" . corfu-next)
-              ([tab] . corfu-next)
-              ("S-TAB" . corfu-previous)
-              ([backtab] . corfu-previous)))
-
-(use-package corfu-doc
-  :hook
-  (corfu-mode . corfu-doc-mode)
-  :bind (:map corfu-map
-              ("M-n" . corfu-doc-scroll-down)
-              ("M-p" . corfu-doc-scroll-up)
-              ("M-d" . corfu-doc-toggle)))
-
-(use-package orderless
-  :config
-  (setq completion-styles '(orderless partial-completion)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
-  ;; :init
-  ;; (setq completion-styles '(orderless)
-  ;;       completion-category-defaults nil
-  ;;       completion-category-overrides '((file (styles . (partial-completion))))))
-
-;; (use-package cape
-;;   :init
-  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
-  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;; (add-to-list 'completion-at-point-functions #'cape-file)
-  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  ;; (add-to-list 'completion-at-point-functions #'cape-keyword))
-
-(setq completion-cycle-threshold 1)
+(use-package orderless)
 
 (setq tab-always-indent 'complete)
+
+(use-package corfu
+  :bind
+  (:map corfu-map
+   ([remap next-line] . nil)
+   ([remap previous-line] . previous-line)
+   ("TAB" . corfu-next)
+   ([tab] . corfu-next)
+   ("S-TAB" . corfu-previous)
+   ([backtab] . corfu-previous)))
+
+(setq corfu-auto t
+      corfu-quit-no-match t
+      corfu-auto-delay 0
+      corfu-auto-prefix 0
+      corfu-cycle t
+      corfu-preselect-first nil
+      )
+
+(defun orderless-fast-dispatch (word index total)
+  (and (= index 0) (= total 1) (length< word 4)
+       `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+
+(orderless-define-completion-style orderless-fast
+  (orderless-style-dispatchers '(orderless-fast-dispatch))
+  (orderless-matching-styles '(orderless-literal orderless-regexp)))
+
+(setq completion-styles '(orderless-fast))
+
+(global-corfu-mode 1)
+
 #+end_src
 
 ***** lsp
@@ -283,7 +277,7 @@ space as separator is useful
 **** language support
 #+begin_src emacs-lisp
 (use-package systemd)
-
+(use-package fish-mode)
 #+end_src
 **** everything in emacs
 *** visual settings
@@ -751,6 +745,18 @@ disable meow in magit
   :bind ("C-c r" . quickrun))
 (setq quickrun-timeout-seconds 5)
 #+end_src
+*** other-window
+#+begin_src emacs-lisp
+
+(defun tu10ng/other-window (COUNT &optional ALL-FRAMES INTERACTIVE)
+  ""
+  (interactive "p\ni\np")
+  (if (= (length (window-list-1)) 1)
+      (consult-buffer-other-window)
+    (other-window COUNT ALL-FRAMES INTERACTIVE)))
+
+(global-set-key "\M-i" #'tu10ng/other-window)
+#+end_src
 *** tmp key-binds
 #+begin_src emacs-lisp
 (global-set-key (kbd "M-l") (lambda (ARG) (interactive "p") (downcase-word (- ARG))))
@@ -767,12 +773,6 @@ disable meow in magit
 
 #+end_src
 ** tools
-*** ace-window
-#+begin_src emacs-lisp
-(use-package ace-window)
-(global-set-key "\M-i" 'ace-window)
-(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-#+end_src
 *** eros
 TODO: can eros's overlay stay if its not covering the cursor?
 #+begin_src emacs-lisp
@@ -802,11 +802,13 @@ TODO: can eros's overlay stay if its not covering the cursor?
    completion-category-defaults nil
    completion-category-overrides '((file (styles partial-completion)))))
 
-
+(global-unset-key "\C-s")
 (use-package consult
   :bind (
          ("C-x b" . consult-buffer)                
-         ("M-y" . consult-yank-pop)                
+         ("C-s r" . consult-ripgrep)
+         ("C-s l" . consult-line)
+         ("C-s u" . consult-focus-lines)
          ("M-g g" . consult-goto-line)             
          )
   :hook (completion-list-mode . consult-preview-at-point-mode)
@@ -884,6 +886,12 @@ I don't like the default error checking. Let's make.
   )
 
 (add-hook 'flycheck-mode-hook 'init-flycheck-hook)
+#+end_src
+*** tldr
+#+begin_src emacs-lisp
+(use-package tldr
+  :bind ("C-c t" . tldr))
+
 #+end_src
 
 ** visuals
@@ -1223,7 +1231,8 @@ vpn may cause this fail!
       ;; org-re-reveal-plugins '(markdown notes math search zoom)
       org-reveal-root "/home/qb/Downloads/reveal.js-4.4.0/")
 #+end_src
+** python
+#+begin_src emacs-lisp
+;; black and yapf not found?
+#+end_src
 
-
-
-(org-babel-load-file "~/.emacs.d/config.org")
