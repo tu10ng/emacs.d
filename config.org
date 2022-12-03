@@ -374,6 +374,8 @@ loading theme is remarkably slow
 *** babel
 #+begin_src emacs-lisp
 (setq org-confirm-babel-evaluate nil)
+(org-babel-do-load-languages 'org-babel-load-languages
+			                 '((emacs-lisp . t)))
 
 #+end_src
 ** other things
