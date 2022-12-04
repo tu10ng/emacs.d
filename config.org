@@ -897,6 +897,21 @@ TODO: can eros's overlay stay if its not covering the cursor?
 (add-to-list 'magit-no-confirm 'stage-all-changes)
 #+end_src
 
+show git log in commit buffer to help writing commit
+#+begin_src emacs-lisp
+;; show last 10 commit message
+(defun tu10ng/git-commit-setup ()
+  (dolist (line (seq-take
+                 (magit-git-lines "log" "--pretty=%B")
+                 10))
+    (let ((line (concat "# " line "\n")))
+      (insert line))))
+
+(add-hook 'git-commit-setup-hook #'tu10ng/git-commit-setup)
+
+
+#+end_src
+
 setup gitignore conf
 #+begin_src emacs-lisp
 (use-package conf-mode
