@@ -280,7 +280,13 @@ corfu will not be tangled with move commands
       )
 
 (global-corfu-mode 1)
+#+end_src
+corfu documentation
+#+begin_src emacs-lisp
+(setq corfu-popupinfo-delay 0
+      corfu-popupinfo-max-height 30)
 
+(corfu-popupinfo-mode 1)
 #+end_src
 ****** cape
 #+begin_src emacs-lisp
