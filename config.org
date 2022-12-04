@@ -159,7 +159,18 @@ change though customisation interface will not add to =init.el=.
   (help-window-select t))
 
 #+end_src
+*** find-file make-directory
+#+begin_src emacs-lisp
+(defun my-find-file (orig-fun &rest args)
+  (let* ((filename (car args))
+         (directory (file-name-directory filename)))
+    (if (not (file-directory-p directory))
+        (make-directory directory t))
+    (apply orig-fun args)))
 
+(advice-add 'find-file :around 'my-find-file)
+
+#+end_src
 *** gc
 
 #+begin_src emacs-lisp
