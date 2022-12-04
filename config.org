@@ -148,8 +148,7 @@ change though customisation interface will not add to =init.el=.
      ("*Org-Babel Error Output*"  :select nil :align bellow :size 0.3)
      ("*package update results*"  :select nil :align bellow :size 10)
      ("*Process List*"            :select t   :align bellow :size 0.3)
-     ("*Occur*"                   :select t   :align bellow)
-     ("\\*eldoc\\( for \\)?.*\\*" :select nil :align bellow :size 15 :regexp t))))
+     ("*Occur*"                   :select t   :align bellow))))
 
 ;; All `temp-buffer's, e.g. *Completions*, will never mess up window layout.
 (use-package help
@@ -357,6 +356,7 @@ delete directory name in one go
                 fish-mode-hook
                 shell-mode-hook
                 html-mode-hook
+                python-mode-hook
                 ))
   (add-hook hook #'eglot-ensure))
 #+end_src
@@ -954,19 +954,15 @@ cargo install git-delta
 
 (advice-add 'orderless-regexp :around #'my-orderless-regexp)
 #+end_src
-*** flycheck
-I don't like the default error checking. Let's make.
+*** flymake
 #+begin_src emacs-lisp
-(use-package flycheck)
-(defun init-flycheck-hook ()
-  (remove-hook 'post-command-hook 'flycheck-maybe-display-error-at-point-soon 'local)
-  (remove-hook 'focus-in-hook 'flycheck-maybe-display-error-at-point-soon 'local)
-  (remove-hook 'post-command-hook 'flycheck-display-error-at-point-soon 'local)
-  (remove-hook 'focus-in-hook 'flycheck-display-error-at-point-soon 'local)
-  )
+(global-set-key (kbd "M-g p") #'flymake-goto-prev-error)
+(global-set-key (kbd "M-g M-p") #'flymake-goto-prev-error)
+(global-set-key (kbd "M-g n") #'flymake-goto-next-error)
+(global-set-key (kbd "M-g M-n") #'flymake-goto-next-error)
 
-(add-hook 'flycheck-mode-hook 'init-flycheck-hook)
 #+end_src
+
 *** tldr
 #+begin_src emacs-lisp
 (use-package tldr
@@ -1099,6 +1095,12 @@ The pointer moves by +1, and restore by taking mod.  "
 (rainbow-cursor-enable)
 
 #+end_src
+*** typing game
+speed-type
+#+begin_src emacs-lisp
+(use-package speed-type)
+
+#+end_src
 
 ** file types
 *** systemd
@@ -1108,7 +1110,7 @@ for editing systemd unit files
 
 #+end_src
 * language confguration
-** org
+** org mode
 *** system wide config
 **** git diff
 Protesilaos wrote a [[https://protesilaos.com/codelog/2021-01-26-git-diff-hunk-elisp-org/][very helpful article]] in which he explains how to change the
@@ -1124,6 +1126,11 @@ Then adding a regex for it to =~/.config/git/config=
 #+begin_src gitconfig
 [diff "org"]
   xfuncname = "^(\\*+ +.*)$"
+#+end_src
+*** better default
+#+begin_src emacs-lisp
+(setq org-cycle-separator-lines -1)
+
 #+end_src
 *** packages
 **** visuals
@@ -1325,5 +1332,9 @@ vpn may cause this fail!
 ** makefile
 #+begin_src emacs-lisp
 (add-hook 'makefile-mode-hook #'(lambda () (fset 'makefile-warn-suspicious-lines 'ignore)))
+#+end_src
+** c mode
+#+begin_src emacs-lisp
+
 #+end_src
 
