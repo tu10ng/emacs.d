@@ -186,6 +186,11 @@ change though customisation interface will not add to =init.el=.
 
 
 #+end_src
+*** byte compile
+#+begin_src emacs-lisp
+(setq load-prefer-newer t)
+
+#+end_src
 
 *** mouse 
 Thanks to Po Lu, scrolling in emacs is great again!
@@ -382,6 +387,15 @@ delete directory name in one go
 loading theme is remarkably slow
 #+begin_src emacs-lisp
 (load-theme 'tango-dark)
+
+;; tweek
+;; prefer green on black(or gray)
+;; blue is the color of the wisdom(conosuba)
+(set-face-attribute 'mode-line nil
+                    :foreground "green"
+                    :background "DarkBlue")
+(set-face-attribute 'default nil
+                    :foreground "green")
 
 #+end_src
 **** modeline
@@ -862,6 +876,10 @@ Esc will be used to enter & leave normal mode
 
 (global-set-key "\M-p" #'backward-paragraph)
 (global-set-key "\M-n" #'forward-paragraph)
+(global-set-key "\M-[" #'backward-sexp)
+(global-set-key "\M-]" #'forward-sexp)
+
+(global-set-key "\C-r" #'query-replace)
 #+end_src
 ** tools
 *** consult
@@ -1109,11 +1127,13 @@ speed-type
 #+end_src
 
 ** file types
-*** systemd
-for editing systemd unit files
-#+begin_src emacs-lisp
-(use-package systemd)
 
+#+begin_src emacs-lisp
+;; systemd
+;; for editing systemd unit files
+(use-package systemd)
+;; ahk
+(use-package ahk-mode)
 #+end_src
 * language confguration
 ** org mode
@@ -1137,6 +1157,8 @@ Then adding a regex for it to =~/.config/git/config=
 #+begin_src emacs-lisp
 (setq org-cycle-separator-lines -1)
 
+;; (setq org-special-ctrl-a/e t)
+      
 #+end_src
 *** packages
 **** visuals
@@ -1152,18 +1174,11 @@ Then adding a regex for it to =~/.config/git/config=
                           (45 . "-")
                           (42 . "•"))
         org-modern-todo-faces
-        '(("TODO" :inverse-video t :inherit org-todo)
-          ("PROJ" :inverse-video t :inherit +org-todo-project)
-          ("STRT" :inverse-video t :inherit +org-todo-active)
-          ("[-]"  :inverse-video t :inherit +org-todo-active)
-          ("HOLD" :inverse-video t :inherit +org-todo-onhold)
-          ("WAIT" :inverse-video t :inherit +org-todo-onhold)
-          ("[?]"  :inverse-video t :inherit +org-todo-onhold)
-          ("KILL" :inverse-video t :inherit +org-todo-cancel)
-          ("NO"   :inverse-video t :inherit +org-todo-cancel))
+        '(("TODO" :inverse-video t :inherit org-todo))
         org-modern-footnote
         (cons nil (cadr org-script-display))
         org-modern-progress nil
+        org-modern-hide-stars nil       ;C-a will not working correctly if this isnt nil
         org-modern-keyword
         '((t . t)
           ("title" . "𝙏")
@@ -1202,31 +1217,16 @@ Then adding a regex for it to =~/.config/git/config=
           ("caption" . "☰")
           ("RESULTS" . "🠶"))))
 #+end_src
-***** emphasis markers
-While ~org-hide-emphasis-markers~ is very nice, it can sometimes make edits which
-occur at the border a bit more fiddley. We can improve this situation without
-sacrificing visual amenities with the =org-appear= package.
-#+begin_src emacs-lisp
-(use-package org-appear
-  :hook (org-mode . org-appear-mode)
-  :config
-  (setq org-appear-autoemphasis t
-        org-appear-autosubmarkers t
-        org-appear-autolinks nil)
-  ;; for proper first-time setup, `org-appear--set-elements'
-  ;; needs to be run after other hooks have acted.
-  (run-at-time nil nil #'org-appear--set-elements))
-#+end_src
 ***** =Valign= for Org Mode tables
 Use [[https://github.com/casouri/valign][valign]] for tables alignments.
 #+begin_src emacs-lisp
-(use-package valign
-  :hook
-  (org-mode . valign-mode)
-  (markdown-mode . valign-mode)
-  :config
-  (setq valign-fancy-bar 1)
-  )
+;; (use-package valign
+;;   :hook
+;;   (org-mode . valign-mode)
+;;   (markdown-mode . valign-mode)
+;;   :config
+;;   (setq valign-fancy-bar 1)
+;;   )
 #+end_src
 **** extra functionality
 *** behaviour
@@ -1309,13 +1309,7 @@ do I'll use the above.
 **** symbols
 #+begin_src emacs-lisp
 (setq org-ellipsis " ▾ "
-      org-hide-leading-stars t
-      org-priority-faces
-      '((?A . 'all-the-icons-red)
-        (?B . 'all-the-icons-orange)
-        (?C . 'all-the-icons-yellow)
-        (?D . 'all-the-icons-green)
-        (?E . 'all-the-icons-blue)))
+      org-hide-leading-stars nil)
 #+end_src
 **** latex
 *** exporting

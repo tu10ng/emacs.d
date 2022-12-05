@@ -8,5 +8,5 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(setq debug-on-error t)
+;; (setq debug-on-error t)
 (org-babel-load-file "~/.emacs.d/config.org")
