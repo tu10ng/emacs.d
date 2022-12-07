@@ -141,7 +141,7 @@ change though customisation interface will not add to =init.el=.
      ("*elfeed-entry*"     :select t :align right :popup t :same nil :size 0.5) ;
      ("*eww*"              :select t :align right :popup t :size 0.6)
      ("*Org todo*"         :select t :align right :popup t :size 0.3)
-     ("*Org Agenda*"       :select t :align right :popup t :size 0.3)
+     ("*Org Agenda*"       :select t :align right :popup t :size 0.6)
      ("*devdocs*"          :select t :align right :popup t :size 0.6)
      ("*Shell Command Output*"    :select nil :align bellow :size 0.4)
      ("*Async Shell Command*"     :select nil :align bellow :size 0.4)
@@ -174,7 +174,9 @@ change though customisation interface will not add to =init.el=.
 
 #+begin_src emacs-lisp
 (use-package gcmh)
-(setq gcmh-high-cons-threshold (* 1 1024 1024))
+(setq gcmh-idle-delay 'auto
+      gcmh-auto-idle-delay-factor 10
+      gcmh-high-cons-threshold (* 20 1024 1024))
 (gcmh-mode 1)
 
 
@@ -285,6 +287,7 @@ corfu will not be tangled with move commands
       )
 
 (global-corfu-mode 1)
+(add-hook 'org-mode-hook #'(lambda () (corfu-mode -1)))
 #+end_src
 corfu documentation
 #+begin_src emacs-lisp
@@ -363,7 +366,7 @@ delete directory name in one go
 (add-to-list 'completion-category-overrides '((eglot (styles orderless))))
 
 (use-package consult-eglot)
-(dolist (hook '(c-mode-common-hook
+(dolist (hook '(;; c-mode-common-hook
                 fish-mode-hook
                 shell-mode-hook
                 html-mode-hook
@@ -395,10 +398,20 @@ loading theme is remarkably slow
                     :foreground "green"
                     :background "DarkBlue")
 (set-face-attribute 'default nil
-                    :foreground "green")
+                    :foreground "green"
+                    :background "#252525")
 
 #+end_src
-**** modeline
+**** modeline content
+#+begin_src emacs-lisp
+(setq-default mode-line-format
+              '("%e" mode-line-front-space
+                mode-line-mule-info
+                mode-line-frame-identification
+                mode-line-buffer-identification
+                mode-line-position))
+
+#+end_src
 **** misc
 #+begin_src emacs-lisp
 (use-package hl-todo)
@@ -986,6 +999,12 @@ cargo install git-delta
 (global-set-key (kbd "M-g M-n") #'flymake-goto-next-error)
 
 #+end_src
+*** dictionary
+#+begin_src emacs-lisp
+(use-package youdao-dictionary
+  :bind (("M-s" . youdao-dictionary-search-at-point+)))
+
+#+end_src
 
 *** tldr
 #+begin_src emacs-lisp
@@ -1249,10 +1268,18 @@ I think it makes sense to have list bullets change with depth
 #+begin_src emacs-lisp
 (setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
 #+end_src
-***** super agenda
+***** agenda
+****** default
 #+begin_src emacs-lisp
-(use-package org-super-agenda)
-(org-super-agenda-mode 1)
+(setq org-agenda-span 14
+      org-agenda-restore-windows-after-quit t
+      org-agenda-files '("~/org/gtd.org"))
+
+#+end_src
+****** super agenda
+#+begin_src emacs-lisp
+;; (use-package org-super-agenda)
+;; (org-super-agenda-mode 1)
 
 #+end_src
 ***** capture
