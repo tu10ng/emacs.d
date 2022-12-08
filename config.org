@@ -231,6 +231,26 @@ Thanks to Po Lu!
  mouse-drag-and-drop-region-cross-program t
  mouse-drag-and-drop-region t)
 #+end_src
+*** tmp keybinds
+#+begin_src emacs-lisp
+(global-set-key (kbd "M-l") (lambda (ARG) (interactive "p") (downcase-word (- ARG))))
+(global-set-key (kbd "M-u") (lambda (ARG) (interactive "p") (upcase-word (- ARG))))
+(global-set-key (kbd "M-c") (lambda (ARG) (interactive "p") (capitalize-word (- ARG))))
+
+(global-set-key (kbd "C-x k") 'kill-this-buffer)
+(global-set-key "\C-r" #'query-replace)
+
+(global-set-key "\C-ct" #'tldr)
+(global-set-key "\C-cm" #'man)
+(global-set-key "\C-xd" #'dired-jump)
+
+(global-set-key "\M-p" #'backward-paragraph)
+(global-set-key "\M-n" #'forward-paragraph)
+(global-set-key "\M-[" #'backward-sexp)
+(global-set-key "\M-]" #'forward-sexp)
+
+#+end_src
+
 ** emacs configuration
 *** modules
 **** interface
@@ -469,7 +489,6 @@ if the buffer isn't a file, simply restart emacs."
 (or (eq (server-running-p) t)
     (server-start))
 #+end_src
-
 *** system daemon
 For running a systemd service for a Emacs server I have the following
 #+name: emacsclient service
@@ -864,23 +883,6 @@ Esc will be used to enter & leave normal mode
 
 (global-set-key "\M-i" #'tu10ng/other-window)
 #+end_src
-*** tmp key-binds
-#+begin_src emacs-lisp
-(global-set-key (kbd "M-l") (lambda (ARG) (interactive "p") (downcase-word (- ARG))))
-(global-set-key (kbd "M-u") (lambda (ARG) (interactive "p") (upcase-word (- ARG))))
-(global-set-key (kbd "M-c") (lambda (ARG) (interactive "p") (capitalize-word (- ARG))))
-
-(global-set-key "\C-ct" #'tldr)
-(global-set-key "\C-cm" #'man)
-(global-set-key "\C-x\C-d" #'dired)
-
-(global-set-key "\M-p" #'backward-paragraph)
-(global-set-key "\M-n" #'forward-paragraph)
-(global-set-key "\M-[" #'backward-sexp)
-(global-set-key "\M-]" #'forward-sexp)
-
-(global-set-key "\C-r" #'query-replace)
-#+end_src
 ** tools
 *** consult
 #+begin_src emacs-lisp
@@ -893,6 +895,7 @@ Esc will be used to enter & leave normal mode
          ("C-s u" . consult-focus-lines)
          ("M-g g" . consult-goto-line)             
          ("M-g o" . consult-outline)
+         ("M-y" . consult-yank-pop)
          )
   :hook (completion-list-mode . consult-preview-at-point-mode)
   :init
