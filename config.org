@@ -890,6 +890,25 @@ Esc will be used to enter & leave normal mode
             (lambda (&rest _arg) (other-window 1)))
 
 #+end_src
+*** move-text
+#+begin_src emacs-lisp
+(use-package move-text)
+(move-text-default-bindings)
+
+(defun indent-region-advice (&rest ignored)
+  (let ((deactivate deactivate-mark))
+    (if (region-active-p)
+        (indent-region (region-beginning) (region-end))
+      (indent-region (line-beginning-position) (line-end-position)))
+    (setq deactivate-mark deactivate)))
+
+(advice-add 'move-text-up :after 'indent-region-advice)
+(advice-add 'move-text-down :after 'indent-region-advice)
+
+
+
+
+#+end_src
 ** tools
 *** consult
 #+begin_src emacs-lisp
@@ -1221,7 +1240,22 @@ Then adding a regex for it to =~/.config/git/config=
 (global-set-key "\C-ca" #'org-agenda-list)
 (global-set-key "\C-cc" #'org-capture)
 
-    
+(defun tu10ng/org-metaup ()
+  (interactive)
+  (condition-case e
+      (org-metaup)
+    (error
+     (move-text-up 0 (line-end-position) 1))))
+
+(defun tu10ng/org-metadown ()
+  (interactive)
+  (condition-case e
+      (org-metadown)
+    (error
+     (move-text-down 0 (line-end-position) 1))))    
+
+(define-key org-mode-map [M-down] #'tu10ng/org-metadown)
+(define-key org-mode-map [M-up] #'tu10ng/org-metaup)
 #+end_src
 *** packages
 **** visuals
@@ -1331,7 +1365,8 @@ I think it makes sense to have list bullets change with depth
       org-agenda-prefix-format '((agenda  . "  • %?-12t% s")
                                  (todo . " %i %-12:c")
                                  (tags . " %i %-12:c")
-                                 (search . " %i %-12:c")))
+                                 (search . " %i %-12:c"))
+      )
 
 
 #+end_src
