@@ -239,6 +239,7 @@ Thanks to Po Lu!
 
 (global-set-key (kbd "C-x k") 'kill-this-buffer)
 (global-set-key "\C-r" #'query-replace)
+(global-set-key "\M-z" #'zap-up-to-char)
 
 (global-set-key "\C-ct" #'tldr)
 (global-set-key "\C-cm" #'man)
@@ -883,6 +884,12 @@ Esc will be used to enter & leave normal mode
 
 (global-set-key "\M-i" #'tu10ng/other-window)
 #+end_src
+*** split-window-right
+#+begin_src emacs-lisp
+(advice-add 'split-window-right :after
+            (lambda (&rest _arg) (other-window 1)))
+
+#+end_src
 ** tools
 *** consult
 #+begin_src emacs-lisp
@@ -1320,7 +1327,12 @@ I think it makes sense to have list bullets change with depth
 #+begin_src emacs-lisp
 (setq org-agenda-span 14
       org-agenda-restore-windows-after-quit t
-      org-agenda-files '("~/org/gtd.org"))
+      org-agenda-files '("~/org/gtd.org")
+      org-agenda-prefix-format '((agenda  . "  • %?-12t% s")
+                                 (todo . " %i %-12:c")
+                                 (tags . " %i %-12:c")
+                                 (search . " %i %-12:c")))
+
 
 #+end_src
 ****** super agenda
