@@ -1,19 +1,14 @@
 #+PROPERTY: header-args :results output none
 * some words
-config mainly based on [[https://github.com/VitalyAnkh/config][@VitalyAnkh emacs config]]
-please do not reward me credits when fetching snippets from my config.
+config based on [[https://github.com/VitalyAnkh/config][VitalyAnkh]], [[https://github.com/Elilif/.elemacs][Eli]],
 
+please do not reward me credits if you find this config helpful.
 * rudimentary configuration
-#+begin_src emacs-lisp :comments no
-(require 'org-tempo)
-#+end_src
-
 ** Personal information
 #+begin_src emacs-lisp
 (setq user-full-name "tu10ng"
       user-mail-address "2059734099@qq.com")
 #+end_src
-
 ** Workaround
 it should be empty in the best scenario
 #+begin_src emacs-lisp
@@ -26,7 +21,6 @@ Test some package
 #+begin_src emacs-lisp
 
 #+end_src
-
 ** better defaults
 *** simple settings
 [[https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org#use-better-defaults][angrybacon/dotemacs]]
@@ -37,10 +31,13 @@ Test some package
  x-stretch-cursor t                               ; Stretch cursor to the glyph width
  indent-tabs-mode nil
  tab-width 4
- sentence-end-double-space nil
  )
 
 (setq undo-limit 80000000
+      help-at-pt-display-when-idle t
+      bookmark-set-fringe-mark nil
+      sentence-end-double-space nil
+      delete-by-moving-to-trash t 
       truncate-string-ellipsis "…"
       password-cache-expiry nil   
       scroll-preserve-screen-position 'always 
@@ -64,7 +61,6 @@ Test some package
       use-short-answers t
       y-or-n-p-use-read-key t
       read-char-choice-use-read-key t
-      make-backup-files nil
       next-line-add-newlines t
       )
 
@@ -176,7 +172,7 @@ change though customisation interface will not add to =init.el=.
 (use-package gcmh)
 (setq gcmh-idle-delay 'auto
       gcmh-auto-idle-delay-factor 10
-      gcmh-high-cons-threshold (* 20 1024 1024))
+      gcmh-high-cons-threshold (* 200 1024 1024))
 (gcmh-mode 1)
 
 
@@ -193,7 +189,6 @@ change though customisation interface will not add to =init.el=.
 (setq load-prefer-newer t)
 
 #+end_src
-
 *** mouse 
 Thanks to Po Lu, scrolling in emacs is great again!
 #+begin_src emacs-lisp
@@ -201,13 +196,12 @@ Thanks to Po Lu, scrolling in emacs is great again!
 (setq pixel-scroll-precision-large-scroll-height 60
       pixel-scroll-precision-interpolation-factor 3.0)
 #+end_src
-
 *** auto-revert
 #+begin_src emacs-lisp
 (use-package autorevert
   :hook (after-init . global-auto-revert-mode)
   :custom
-  (auto-revert-interval 1)
+  (auto-revert-interval 0.3)
   (auto-revert-avoid-polling t)
   (auto-revert-verbose nil)
   (auto-revert-remote-files t)
@@ -215,11 +209,11 @@ Thanks to Po Lu, scrolling in emacs is great again!
   )
 
 #+end_src
-
 *** auto-save
 recommend use with vc to avoid accident lost.
 #+begin_src emacs-lisp
-(setq auto-save-default nil)
+(setq auto-save-default nil
+      make-backup-files nil)
 
 (add-to-list 'load-path "~/.emacs.d/site-lisp/auto-save/")
 (require 'auto-save)
@@ -230,7 +224,6 @@ recommend use with vc to avoid accident lost.
 (auto-save-enable)
 
 #+end_src
-
 *** Drag text from emacs to other apps
 Thanks to Po Lu!
 #+begin_src emacs-lisp
@@ -283,11 +276,11 @@ corfu will not be tangled with move commands
       corfu-auto-delay 0
       corfu-auto-prefix 0
       corfu-cycle t
+      corfu-excluded-modes '(org-mode)
       corfu-preselect-first nil
       )
 
 (global-corfu-mode 1)
-(add-hook 'org-mode-hook #'(lambda () (corfu-mode -1)))
 #+end_src
 corfu documentation
 #+begin_src emacs-lisp
@@ -338,6 +331,7 @@ corfu documentation
 (setq read-extended-command-predicate
       #'command-completion-default-include-p)
 (setq enable-recursive-minibuffers t)
+(minibuffer-depth-indicate-mode 1)
 #+end_src
 
 ****** vertico-directory
@@ -366,13 +360,15 @@ delete directory name in one go
 (add-to-list 'completion-category-overrides '((eglot (styles orderless))))
 
 (use-package consult-eglot)
-(dolist (hook '(;; c-mode-common-hook
-                fish-mode-hook
-                shell-mode-hook
-                html-mode-hook
-                python-mode-hook
-                ))
-  (add-hook hook #'eglot-ensure))
+
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (unless (derived-mode-p
+                     'emacs-lisp-mode
+                     'lisp-mode
+                     'makefile-mode
+                     'c-mode)
+              (eglot-ensure))))
 #+end_src
 **** language support
 #+begin_src emacs-lisp
@@ -404,6 +400,9 @@ loading theme is remarkably slow
 #+end_src
 **** modeline content
 #+begin_src emacs-lisp
+(use-package mood-line)
+(mood-line-mode)
+
 (setq-default mode-line-format
               '("%e" mode-line-front-space
                 mode-line-mule-info
@@ -424,14 +423,6 @@ loading theme is remarkably slow
       '(("http" . "127.0.0.1:8889")
         ("https" . "127.0.0.1:8889"))
       )
-#+end_src
-
-*** babel
-#+begin_src emacs-lisp
-(setq org-confirm-babel-evaluate nil)
-(org-babel-do-load-languages 'org-babel-load-languages
-			                 '((emacs-lisp . t)))
-
 #+end_src
 ** other things
 *** editor interaction
@@ -879,10 +870,6 @@ Esc will be used to enter & leave normal mode
 (global-set-key (kbd "M-u") (lambda (ARG) (interactive "p") (upcase-word (- ARG))))
 (global-set-key (kbd "M-c") (lambda (ARG) (interactive "p") (capitalize-word (- ARG))))
 
-(global-set-key "\C-cl" #'org-store-link)
-(global-set-key "\C-ca" #'org-agenda-list)
-(global-set-key "\C-cc" #'org-capture)
-
 (global-set-key "\C-ct" #'tldr)
 (global-set-key "\C-cm" #'man)
 (global-set-key "\C-x\C-d" #'dired)
@@ -905,6 +892,7 @@ Esc will be used to enter & leave normal mode
          ("C-s l" . consult-line)
          ("C-s u" . consult-focus-lines)
          ("M-g g" . consult-goto-line)             
+         ("M-g o" . consult-outline)
          )
   :hook (completion-list-mode . consult-preview-at-point-mode)
   :init
@@ -919,7 +907,16 @@ Esc will be used to enter & leave normal mode
   (consult-async-input-debounce 0.1)
   )
 #+end_src
+consult-dir
+remap M-; in vertico-map to find and insert directory into minibuffer prompt
+#+begin_src emacs-lisp
+(use-package consult-dir
+  :bind (("C-x C-d" . consult-dir)
+         :map vertico-map
+         ("M-;" . consult-dir)))
 
+
+#+end_src
 *** eros
 TODO: can eros's overlay stay if its not covering the cursor?
 #+begin_src emacs-lisp
@@ -956,6 +953,14 @@ setup gitignore conf
   :mode (("\\.gitignore\\'"     . conf-unix-mode)
          ("\\.gitconfig\\'"     . conf-unix-mode)
          ("\\.gitattributes\\'" . conf-unix-mode)))
+#+end_src
+*** magit todos
+#+begin_src emacs-lisp
+(use-package magit-todos)
+(setq magit-todos-auto-group-items 3)
+(magit-todos-mode)
+
+
 #+end_src
 *** magit delta
 git diff syntax highlighter written in rust.
@@ -1012,7 +1017,6 @@ cargo install git-delta
   :bind ("C-c t" . tldr))
 
 #+end_src
-
 ** visuals
 *** info colors, helpful
 #+begin_src emacs-lisp
@@ -1067,16 +1071,39 @@ cargo install git-delta
 #+begin_src emacs-lisp
 (use-package prettify-greek)
 (use-package prettify-math)
-(setq-default prettify-symbols-alist prettify-greek-lower)
-;;(global-prettify-symbols-mode 1)
-;;(global-prettify-math-mode)
+(setq-default prettify-symbols-alist
+              (nconc prettify-greek-lower
+                      '(("#+BEGIN_SRC" . "✎")
+					    ("#+END_SRC" . "□")
+					    ("#+begin_src" . "✎")
+					    ("#+end_src" . "□")
+                        ("#+RESULTS:" . "⟾")
+					    ("[ ]" . "☐")
+                        ("[-]" . "🝕")
+					    ("[X]" . "🗹")
+					    ("#+begin_quote" . "»")
+					    ("#+end_quote" . "□")
+					    ("#+begin_verse" . "ζ")
+					    ("#+end_verse" . "□")
+					    ("#+begin_example" . "⟝")
+					    ("#+end_example" . "□")
+                        ("#+begin_export" . "🙵")
+                        ("#+end_export" . "□")
+                        ("#+END:" . "□")
+                        ("#+BEGIN:" . "✎")
+                        ("#+CAPTION:" . "✑")
+                        ("#+ATTR_LATEX" . "🄛")
+					    )))
+
+;; (global-prettify-symbols-mode 1)  ;; not working
+;; (global-prettify-math-mode)
 (dolist (hook '(prog-mode-hook
                 shell-mode-hook
                 text-mode-hook))
   (add-hook hook #'(lambda ()
                      (prettify-symbols-mode 1))))
-#+end_src
 
+#+end_src
 ** frivolities
 *** selectric
 Every so often, you want everyone else to /know/ that you're typing, or just to
@@ -1144,7 +1171,6 @@ speed-type
 (use-package speed-type)
 
 #+end_src
-
 ** file types
 
 #+begin_src emacs-lisp
@@ -1174,67 +1200,83 @@ Then adding a regex for it to =~/.config/git/config=
 #+end_src
 *** better default
 #+begin_src emacs-lisp
-(setq org-cycle-separator-lines -1)
+(setq org-cycle-separator-lines -1
+      org-use-fast-todo-selection 'expert
+      org-log-into-drawer t
+      org-startup-folded t
+      org-hide-emphasis-markers t
+      org-special-ctrl-a/e t)
 
-;; (setq org-special-ctrl-a/e t)
-      
+(global-set-key "\C-cl" #'org-store-link)
+(global-set-key "\C-ca" #'org-agenda-list)
+(global-set-key "\C-cc" #'org-capture)
+
+    
 #+end_src
 *** packages
 **** visuals
-***** use org-modern
+***** org-modern
 #+begin_src emacs-lisp
-(use-package org-modern
-  :hook (org-mode . org-modern-mode)
-  :config
-  (setq org-modern-star ["◉" "✜" "✸" "✿" "✤" "○" "◆" "▶"]
-        org-modern-table-vertical 1
-        org-modern-table-horizontal 0.2
-        org-modern-list '((43 . "➤")
-                          (45 . "-")
-                          (42 . "•"))
-        org-modern-todo-faces
-        '(("TODO" :inverse-video t :inherit org-todo))
-        org-modern-footnote
-        (cons nil (cadr org-script-display))
-        org-modern-progress nil
-        org-modern-hide-stars nil       ;C-a will not working correctly if this isnt nil
-        org-modern-keyword
-        '((t . t)
-          ("title" . "𝙏")
-          ("subtitle" . "𝙩")
-          ("author" . "𝘼")
-          ("email" . #("" 0 1 (display (raise -0.14))))
-          ("date" . "𝘿")
-          ("property" . "☸")
-          ("options" . "⌥")
-          ("startup" . "⏻")
-          ("macro" . "𝓜")
-          ("bind" . #("" 0 1 (display (raise -0.1))))
-          ("bibliography" . "")
-          ("print_bibliography" . #("" 0 1 (display (raise -0.1))))
-          ("cite_export" . "⮭")
-          ("import" . "⇤")
-          ("setupfile" . "⇚")
-          ("html_head" . "🅷")
-          ("html" . "🅗")
-          ("latex_class" . "🄻")
-          ("latex_class_options" . #("🄻" 1 2 (display (raise -0.14))))
-          ("latex_header" . "🅻")
-          ("latex_header_extra" . "🅻⁺")
-          ("latex" . "🅛")
-          ("beamer_theme" . "🄱")
-          ("beamer_color_theme" . #("🄱" 1 2 (display (raise -0.12))))
-          ("beamer_font_theme" . "🄱𝐀")
-          ("beamer_header" . "🅱")
-          ("beamer" . "🅑")
-          ("attr_latex" . "🄛")
-          ("attr_html" . "🄗")
-          ("attr_org" . "⒪")
-          ("call" . #("" 0 1 (display (raise -0.15))))
-          ("name" . "⁍")
-          ("header" . "›")
-          ("caption" . "☰")
-          ("RESULTS" . "🠶"))))
+;; (use-package org-modern
+;;   :hook
+;;   (org-mode . org-modern-mode)
+;;   (org-agenda-finalize . org-modern-agenda)
+;;   :config
+;;   (setq org-modern-table-vertical 1
+;;         org-modern-table-horizontal 0.2
+;;         org-modern-list '((43 . "➤")
+;;                           (45 . "-")
+;;                           (42 . "•"))
+;;         org-modern-todo-faces
+;;         '(("TODO" :inverse-video t :inherit org-todo))
+;;         org-modern-footnote
+;;         (cons nil (cadr org-script-display))
+;;         org-modern-progress nil
+;;         org-modern-hide-stars nil       ;C-a will not working correctly if this isnt nil
+;;         org-modern-keyword
+;;         '((t . t)
+;;           ("title" . "𝙏")
+;;           ("subtitle" . "𝙩")
+;;           ("author" . "𝘼")
+;;           ("email" . #("" 0 1 (display (raise -0.14))))
+;;           ("date" . "𝘿")
+;;           ("property" . "☸")
+;;           ("options" . "⌥")
+;;           ("startup" . "⏻")
+;;           ("macro" . "𝓜")
+;;           ("bind" . #("" 0 1 (display (raise -0.1))))
+;;           ("bibliography" . "")
+;;           ("print_bibliography" . #("" 0 1 (display (raise -0.1))))
+;;           ("cite_export" . "⮭")
+;;           ("import" . "⇤")
+;;           ("setupfile" . "⇚")
+;;           ("html_head" . "🅷")
+;;           ("html" . "🅗")
+;;           ("latex_class" . "🄻")
+;;           ("latex_class_options" . #("🄻" 1 2 (display (raise -0.14))))
+;;           ("latex_header" . "🅻")
+;;           ("latex_header_extra" . "🅻⁺")
+;;           ("latex" . "🅛")
+;;           ("beamer_theme" . "🄱")
+;;           ("beamer_color_theme" . #("🄱" 1 2 (display (raise -0.12))))
+;;           ("beamer_font_theme" . "🄱𝐀")
+;;           ("beamer_header" . "🅱")
+;;           ("beamer" . "🅑")
+;;           ("attr_latex" . "🄛")
+;;           ("attr_html" . "🄗")
+;;           ("attr_org" . "⒪")
+;;           ("call" . #("" 0 1 (display (raise -0.15))))
+;;           ("name" . "⁍")
+;;           ("header" . "›")
+;;           ("caption" . "☰")
+;;           ("RESULTS" . "🠶"))))
+#+end_src
+***** org modern indent
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/site-lisp/org-modern-indent/")
+(require 'org-modern-indent)
+(add-hook 'org-indent-mode-hook #'org-modern-indent-mode)
+
 #+end_src
 ***** =Valign= for Org Mode tables
 Use [[https://github.com/casouri/valign][valign]] for tables alignments.
@@ -1249,7 +1291,7 @@ Use [[https://github.com/casouri/valign][valign]] for tables alignments.
 #+end_src
 **** extra functionality
 *** behaviour
-**** tweaking defaults
+**** defaults
 #+begin_src emacs-lisp
 (setq org-directory "~/org"
       org-use-property-inheritance t
@@ -1261,6 +1303,8 @@ Use [[https://github.com/casouri/valign][valign]] for tables alignments.
       org-export-allow-bind-keywords t
       org-image-actual-width '(0.8)
       org-footnote-auto-adjust t)
+
+(require 'org-tempo)
 #+end_src
 **** extra functionality
 ***** List bullet sequence
@@ -1294,6 +1338,21 @@ I think it makes sense to have list bullets change with depth
                :prepend t
                :immediate-finish t
                :template ("* %^{gtd?}")))))
+#+end_src
+***** babel
+#+begin_src emacs-lisp
+(setq org-confirm-babel-evaluate nil)
+(setq org-babel-default-header-args
+      '((:session . "none")
+        (:results . "output replace")
+        (:exports . "code")
+        (:cache . "no")
+        (:noweb . "no")
+        (:hlines . "no")
+        (:tangle . "no")))
+
+(org-babel-do-load-languages 'org-babel-load-languages
+			                 '((emacs-lisp . t)))
 #+end_src
 *** visuals
 **** font display
@@ -1334,9 +1393,16 @@ Apparently this causes issues with some people, but I haven't noticed anything
 problematic beyond the expected slight delay in some fontification, so until I
 do I'll use the above.
 **** symbols
+symbol prettify is set [[*pretty symbol characters][pretty symbol characters]] 
 #+begin_src emacs-lisp
 (setq org-ellipsis " ▾ "
       org-hide-leading-stars nil)
+#+end_src
+**** org-appear
+#+begin_src emacs-lisp
+(use-package org-appear)
+(add-hook 'org-mode-hook #'org-appear-mode)
+(setq org-appear-autolinks t)
 #+end_src
 **** latex
 *** exporting
@@ -1362,6 +1428,8 @@ vpn may cause this fail!
 #+end_src
 ** c mode
 #+begin_src emacs-lisp
-
+(add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
 #+end_src
+
+
 
