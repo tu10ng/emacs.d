@@ -999,6 +999,7 @@ cargo install git-delta
 #+begin_src emacs-lisp
 (use-package magit-delta
   :hook (magit-mode . magit-delta-mode))
+
 #+end_src
 *** pyim
 #+begin_src elisp
@@ -1233,11 +1234,10 @@ Then adding a regex for it to =~/.config/git/config=
       org-use-fast-todo-selection 'expert
       org-log-into-drawer t
       org-startup-folded t
-      org-hide-emphasis-markers t
-      org-special-ctrl-a/e t)
+      org-hide-emphasis-markers t)
 
 (global-set-key "\C-cl" #'org-store-link)
-(global-set-key "\C-ca" #'org-agenda-list)
+(global-set-key "\C-ca" (lambda () (interactive) (org-agenda nil "n")))
 (global-set-key "\C-cc" #'org-capture)
 
 (defun tu10ng/org-metaup ()
@@ -1257,83 +1257,6 @@ Then adding a regex for it to =~/.config/git/config=
 (define-key org-mode-map [M-down] #'tu10ng/org-metadown)
 (define-key org-mode-map [M-up] #'tu10ng/org-metaup)
 #+end_src
-*** packages
-**** visuals
-***** org-modern
-#+begin_src emacs-lisp
-;; (use-package org-modern
-;;   :hook
-;;   (org-mode . org-modern-mode)
-;;   (org-agenda-finalize . org-modern-agenda)
-;;   :config
-;;   (setq org-modern-table-vertical 1
-;;         org-modern-table-horizontal 0.2
-;;         org-modern-list '((43 . "➤")
-;;                           (45 . "-")
-;;                           (42 . "•"))
-;;         org-modern-todo-faces
-;;         '(("TODO" :inverse-video t :inherit org-todo))
-;;         org-modern-footnote
-;;         (cons nil (cadr org-script-display))
-;;         org-modern-progress nil
-;;         org-modern-hide-stars nil       ;C-a will not working correctly if this isnt nil
-;;         org-modern-keyword
-;;         '((t . t)
-;;           ("title" . "𝙏")
-;;           ("subtitle" . "𝙩")
-;;           ("author" . "𝘼")
-;;           ("email" . #("" 0 1 (display (raise -0.14))))
-;;           ("date" . "𝘿")
-;;           ("property" . "☸")
-;;           ("options" . "⌥")
-;;           ("startup" . "⏻")
-;;           ("macro" . "𝓜")
-;;           ("bind" . #("" 0 1 (display (raise -0.1))))
-;;           ("bibliography" . "")
-;;           ("print_bibliography" . #("" 0 1 (display (raise -0.1))))
-;;           ("cite_export" . "⮭")
-;;           ("import" . "⇤")
-;;           ("setupfile" . "⇚")
-;;           ("html_head" . "🅷")
-;;           ("html" . "🅗")
-;;           ("latex_class" . "🄻")
-;;           ("latex_class_options" . #("🄻" 1 2 (display (raise -0.14))))
-;;           ("latex_header" . "🅻")
-;;           ("latex_header_extra" . "🅻⁺")
-;;           ("latex" . "🅛")
-;;           ("beamer_theme" . "🄱")
-;;           ("beamer_color_theme" . #("🄱" 1 2 (display (raise -0.12))))
-;;           ("beamer_font_theme" . "🄱𝐀")
-;;           ("beamer_header" . "🅱")
-;;           ("beamer" . "🅑")
-;;           ("attr_latex" . "🄛")
-;;           ("attr_html" . "🄗")
-;;           ("attr_org" . "⒪")
-;;           ("call" . #("" 0 1 (display (raise -0.15))))
-;;           ("name" . "⁍")
-;;           ("header" . "›")
-;;           ("caption" . "☰")
-;;           ("RESULTS" . "🠶"))))
-#+end_src
-***** org modern indent
-#+begin_src emacs-lisp
-(add-to-list 'load-path "~/.emacs.d/site-lisp/org-modern-indent/")
-(require 'org-modern-indent)
-(add-hook 'org-indent-mode-hook #'org-modern-indent-mode)
-
-#+end_src
-***** =Valign= for Org Mode tables
-Use [[https://github.com/casouri/valign][valign]] for tables alignments.
-#+begin_src emacs-lisp
-;; (use-package valign
-;;   :hook
-;;   (org-mode . valign-mode)
-;;   (markdown-mode . valign-mode)
-;;   :config
-;;   (setq valign-fancy-bar 1)
-;;   )
-#+end_src
-**** extra functionality
 *** behaviour
 **** defaults
 #+begin_src emacs-lisp
@@ -1350,18 +1273,18 @@ Use [[https://github.com/casouri/valign][valign]] for tables alignments.
 
 (require 'org-tempo)
 #+end_src
-**** extra functionality
-***** List bullet sequence
+**** List bullet sequence
 I think it makes sense to have list bullets change with depth
 #+begin_src emacs-lisp
 (setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
 #+end_src
-***** agenda
-****** default
+**** agenda
+***** default
 #+begin_src emacs-lisp
 (setq org-agenda-span 14
       org-agenda-restore-windows-after-quit t
       org-agenda-files '("~/org/gtd.org")
+      org-agenda-todo-ignore-deadlines t
       org-agenda-prefix-format '((agenda  . "  • %?-12t% s")
                                  (todo . " %i %-12:c")
                                  (tags . " %i %-12:c")
@@ -1370,14 +1293,8 @@ I think it makes sense to have list bullets change with depth
 
 
 #+end_src
-****** super agenda
-#+begin_src emacs-lisp
-;; (use-package org-super-agenda)
-;; (org-super-agenda-mode 1)
-
-#+end_src
-***** capture
-****** doct (declarative org capture templates)
+**** capture
+***** doct (declarative org capture templates)
 #+begin_src emacs-lisp
 (use-package doct)
 
@@ -1389,7 +1306,7 @@ I think it makes sense to have list bullets change with depth
                :immediate-finish t
                :template ("* %^{gtd?}")))))
 #+end_src
-***** babel
+**** babel
 #+begin_src emacs-lisp
 (setq org-confirm-babel-evaluate nil)
 (setq org-babel-default-header-args
@@ -1405,6 +1322,24 @@ I think it makes sense to have list bullets change with depth
 			                 '((emacs-lisp . t)))
 #+end_src
 *** visuals
+**** org modern indent
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/site-lisp/org-modern-indent/")
+(require 'org-modern-indent)
+(add-hook 'org-indent-mode-hook #'org-modern-indent-mode)
+
+#+end_src
+**** =Valign= for Org Mode tables
+Use [[https://github.com/casouri/valign][valign]] for tables alignments.
+#+begin_src emacs-lisp
+;; (use-package valign
+;;   :hook
+;;   (org-mode . valign-mode)
+;;   (markdown-mode . valign-mode)
+;;   :config
+;;   (setq valign-fancy-bar 1)
+;;   )
+#+end_src
 **** font display
 
 #+begin_src emacs-lisp
