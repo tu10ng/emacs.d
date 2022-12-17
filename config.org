@@ -131,7 +131,7 @@ change though customisation interface will not add to =init.el=.
      (comint-mode          :select t :align right :size 0.2)
      (grep-mode            :select t :align right)
      (rg-mode              :select t :align right)
-     (compilation-mode     :select t :align right :size 0.2)
+     (compilation-mode     :select t :align right)
      (Man-mode             :select t :align right)
      (info-mode            :select t :align right :popup t :size 0.5)
      ("*elfeed-entry*"     :select t :align right :popup t :same nil :size 0.5) ;
@@ -179,14 +179,15 @@ change though customisation interface will not add to =init.el=.
 #+end_src
 *** emacs c source directory
 #+begin_src emacs-lisp
-(setq source-directory "/home/qb/Projects/emacs-git/")
-(setq find-function-C-source-directory "/home/qb/Projects/emacs-git/src/")
+(setq source-directory "/home/tu10ng/Project/emacs-git/src/emacs-git/")
+(setq find-function-C-source-directory "/home/tu10ng/Project/emacs-git/src/emacs-git/src/")
 
 
 #+end_src
 *** byte compile
 #+begin_src emacs-lisp
 (setq load-prefer-newer t)
+(native-compile-prune-cache)
 
 #+end_src
 *** mouse 
@@ -230,6 +231,32 @@ Thanks to Po Lu!
 (setq
  mouse-drag-and-drop-region-cross-program t
  mouse-drag-and-drop-region t)
+#+end_src
+*** indent buffer
+#+begin_src emacs-lisp
+(defun indent-buffer ()
+  (interactive)
+  (save-excursion
+    (indent-region (point-min) (point-max) nil)))
+(global-set-key "\C-\M-\\" 'indent-buffer)
+
+#+end_src
+*** compilation buffer
+#+begin_src emacs-lisp
+(use-package compile
+  :ensure nil
+  :hook (compilation-filter . colorize-compilation-buffer)
+  :config
+  (defun colorize-compilation-buffer ()
+    "ANSI coloring in compilation buffers."
+    (with-silent-modifications
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  :custom
+  (compilation-always-kill t)
+  (compilation-scroll-output t)
+  ;; Save all buffers on M-x `compile'
+  (compilation-ask-about-save nil))
+
 #+end_src
 *** tmp keybinds
 #+begin_src emacs-lisp
@@ -960,7 +987,7 @@ TODO: can eros's overlay stay if its not covering the cursor?
 (add-to-list 'magit-no-confirm 'stage-all-changes)
 #+end_src
 
-show git log in commit buffer to help writing commit
+**** show git log in commit buffer to help writing commit
 #+begin_src emacs-lisp
 ;; show last 10 commit message
 (defun tu10ng/git-commit-setup ()
@@ -975,7 +1002,7 @@ show git log in commit buffer to help writing commit
 
 #+end_src
 
-setup gitignore conf
+**** setup gitignore conf
 #+begin_src emacs-lisp
 (use-package conf-mode
   :ensure nil
@@ -983,7 +1010,7 @@ setup gitignore conf
          ("\\.gitconfig\\'"     . conf-unix-mode)
          ("\\.gitattributes\\'" . conf-unix-mode)))
 #+end_src
-*** magit todos
+**** magit todos
 #+begin_src emacs-lisp
 (use-package magit-todos)
 (setq magit-todos-auto-group-items 3)
@@ -991,7 +1018,7 @@ setup gitignore conf
 
 
 #+end_src
-*** magit delta
+**** magit delta
 git diff syntax highlighter written in rust.
 #+begin_src shell
 cargo install git-delta
@@ -1000,6 +1027,24 @@ cargo install git-delta
 (use-package magit-delta
   :hook (magit-mode . magit-delta-mode))
 
+#+end_src
+**** git-add-commit-push
+#+begin_src emacs-lisp
+(defun aborn/magit-instant-commit ()
+  "instantly commit, commit message contain current time."
+  (interactive)
+  (magit-diff-unstaged)
+  (magit-stage-modified)
+  (magit-diff-staged)
+  (let ((msg (format-time-string
+              "commit by magit in emacs@%Y-%m-%d %H:%M:%S"
+              (current-time))))
+    (magit-call-git "commit" "-m" msg))
+  (magit-refresh)
+  (magit-mode-bury-buffer))
+
+(transient-append-suffix 'magit-commit "c"
+  '("i" "instant" aborn/magit-instant-commit))
 #+end_src
 *** pyim
 #+begin_src elisp
@@ -1238,7 +1283,8 @@ Then adding a regex for it to =~/.config/git/config=
 
 (global-set-key "\C-cl" #'org-store-link)
 (global-set-key "\C-ca" (lambda () (interactive) (org-agenda nil "n")))
-(global-set-key "\C-cc" #'org-capture)
+;; (global-set-key "\C-cc" #'org-capture)
+(global-set-key "\C-cc" (lambda () (interactive) (org-capture 4 "g")))
 
 (defun tu10ng/org-metaup ()
   (interactive)
@@ -1415,6 +1461,9 @@ vpn may cause this fail!
 #+begin_src emacs-lisp
 (add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
 #+end_src
+** rust mode
+#+begin_src emacs-lisp
+(use-package rust-mode)
 
-
+#+end_src
 
