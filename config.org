@@ -10,10 +10,9 @@ please do not reward me credits if you find this config helpful.
       user-mail-address "2059734099@qq.com")
 #+end_src
 ** Workaround
-it should be empty in the best scenario
 #+begin_src emacs-lisp
-(setq native-comp-async-jobs-number 20)
-
+;; need to becalled before loading smerge
+(setq smerge-command-prefix "\C-cv")
 
 #+end_src
 
@@ -40,6 +39,8 @@ Test some package
       delete-by-moving-to-trash t 
       truncate-string-ellipsis "…"
       password-cache-expiry nil   
+      resize-mini-windows t
+      eldoc-idle-delay 0
       scroll-preserve-screen-position 'always 
       scroll-margin 0
       scroll-conservatively 0
@@ -144,7 +145,8 @@ change though customisation interface will not add to =init.el=.
      ("*Org-Babel Error Output*"  :select nil :align bellow :size 0.3)
      ("*package update results*"  :select nil :align bellow :size 10)
      ("*Process List*"            :select t   :align bellow :size 0.3)
-     ("*Occur*"                   :select t   :align bellow))))
+     ("*Occur*"                   :select t   :align bellow)
+     ("\\*eldoc\\( for \\)?.*\\*" :select t :size 0.5 :regexp t))))
 
 ;; All `temp-buffer's, e.g. *Completions*, will never mess up window layout.
 (use-package help
@@ -258,6 +260,19 @@ Thanks to Po Lu!
   (compilation-ask-about-save nil))
 
 #+end_src
+*** treesitter
+#+begin_src emacs-lisp
+(require 'treesit)
+;; (setq treesit-extra-load-path '("/usr/bin/"))
+(when (treesit-available-p)
+  (push '(c++-mode . c++-ts-mode) major-mode-remap-alist)
+  (push '(c-mode . c-ts-mode) major-mode-remap-alist)
+  (push '(css-mode . css-ts-mode) major-mode-remap-alist)
+  (push '(python-mode . python-ts-mode) major-mode-remap-alist)
+  (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
+  (push '(js-json-mode . json-ts-mode) major-mode-remap-alist)
+  (push '(typescript-mode . typescript-ts-mode) major-mode-remap-alist))
+#+end_src
 *** tmp keybinds
 #+begin_src emacs-lisp
 (global-set-key (kbd "M-l") (lambda (ARG) (interactive "p") (downcase-word (- ARG))))
@@ -278,11 +293,9 @@ Thanks to Po Lu!
 (global-set-key "\M-]" #'forward-sexp)
 
 #+end_src
-
 ** emacs configuration
-*** modules
-**** interface
-***** orderless
+*** interface
+**** orderless
 #+begin_src emacs-lisp
 (use-package orderless)
 
@@ -297,8 +310,8 @@ Thanks to Po Lu!
                                   orderless-prefixes))
                                   
 #+end_src
-***** capf
-****** corfu
+**** capf
+***** corfu
 only use TAB and S-TAB to select candidate and auto insert
 corfu will not be tangled with move commands
 #+begin_src emacs-lisp
@@ -310,6 +323,8 @@ corfu will not be tangled with move commands
    ([remap next-line] . nil)
    ([remap previous-line] . nil)
    ([remap newline] . nil)
+   ([remap beginning-of-buffer] . nil)
+   ([remap end-of-buffer] . nil)
    ("RET" . nil)
    ([ret] . nil)
    ("M-p" . nil)
@@ -337,14 +352,13 @@ corfu documentation
 
 (corfu-popupinfo-mode 1)
 #+end_src
-****** cape
+***** cape
 #+begin_src emacs-lisp
 (use-package cape)
 (add-to-list 'completion-at-point-functions #'cape-file)
 #+end_src
-
-***** vertico
-****** vertico common
+**** vertico
+***** vertico common
 #+begin_src emacs-lisp
 (use-package vertico
   :hook (after-init . vertico-mode)
@@ -381,8 +395,7 @@ corfu documentation
 (setq enable-recursive-minibuffers t)
 (minibuffer-depth-indicate-mode 1)
 #+end_src
-
-****** vertico-directory
+***** vertico-directory
 delete directory name in one go
 #+begin_src emacs-lisp
 (use-package vertico-directory
@@ -395,14 +408,12 @@ delete directory name in one go
   ;; Tidy shadowed file names
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 #+end_src
-
-****** Rich annotation
+***** Rich annotation
 #+begin_src emacs-lisp
 (use-package marginalia)
 (marginalia-mode)
 #+end_src
-
-***** lsp
+**** lsp
 #+begin_src emacs-lisp
 (use-package eglot)
 (add-to-list 'completion-category-overrides '((eglot (styles orderless))))
@@ -418,12 +429,6 @@ delete directory name in one go
                      'c-mode)
               (eglot-ensure))))
 #+end_src
-**** language support
-#+begin_src emacs-lisp
-(use-package systemd)
-(use-package fish-mode)
-#+end_src
-**** everything in emacs
 *** visual settings
 **** font
 #+begin_src emacs-lisp
@@ -936,6 +941,23 @@ Esc will be used to enter & leave normal mode
 
 
 #+end_src
+*** smart-hungry-delete
+#+begin_src emacs-lisp
+
+(use-package smart-hungry-delete
+  :bind (("<backspace>" . smart-hungry-delete-backward-char)
+              ("C-d" . smart-hungry-delete-forward-char)))
+
+
+#+end_src
+*** delsel
+Delete selection when we type or paste.
+#+begin_src emacs-lisp
+(use-package delsel
+  :config
+  (delete-selection-mode))
+
+#+end_src
 ** tools
 *** consult
 #+begin_src emacs-lisp
@@ -986,7 +1008,6 @@ TODO: can eros's overlay stay if its not covering the cursor?
 (setq magit-commit-ask-to-stage nil)
 (add-to-list 'magit-no-confirm 'stage-all-changes)
 #+end_src
-
 **** show git log in commit buffer to help writing commit
 #+begin_src emacs-lisp
 ;; show last 10 commit message
@@ -1001,7 +1022,6 @@ TODO: can eros's overlay stay if its not covering the cursor?
 
 
 #+end_src
-
 **** setup gitignore conf
 #+begin_src emacs-lisp
 (use-package conf-mode
@@ -1078,6 +1098,8 @@ cargo install git-delta
 (global-set-key (kbd "M-g n") #'flymake-goto-next-error)
 (global-set-key (kbd "M-g M-n") #'flymake-goto-next-error)
 
+;; TODO: no help, maybe because when corfu selection is active, flymake will not check
+(setq flymake-no-changes-timeout 0.1)
 #+end_src
 *** dictionary
 #+begin_src emacs-lisp
@@ -1247,12 +1269,8 @@ speed-type
 
 #+end_src
 ** file types
-
 #+begin_src emacs-lisp
-;; systemd
-;; for editing systemd unit files
 (use-package systemd)
-;; ahk
 (use-package ahk-mode)
 #+end_src
 * language confguration
@@ -1464,6 +1482,12 @@ vpn may cause this fail!
 ** rust mode
 #+begin_src emacs-lisp
 (use-package rust-mode)
+
+#+end_src
+** markdown mode
+#+begin_src emacs-lisp
+(use-package markdown-mode)
+(setq markdown-command "marked")
 
 #+end_src
 
