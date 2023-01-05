@@ -14,6 +14,8 @@ please do not reward me credits if you find this config helpful.
 ;; need to becalled before loading smerge
 (setq smerge-command-prefix "\C-cv")
 
+(use-package exec-path-from-shell)
+(exec-path-from-shell-initialize)
 #+end_src
 
 Test some package
@@ -123,9 +125,9 @@ change though customisation interface will not add to =init.el=.
    '((magit-status-mode    :select t :align right)
      (magit-log-mode       :select t :align below :popup t :same nil)
      (magit-rev-mode       :select t :align right)
-     ("*quickrun*"         :select t)
+     ("*quickrun*"         :select t :other t)
      (profiler-report-mode :select t)
-     (xwidget-webkit-mode  :select t :same t)
+     (xwidget-webkit-mode  :select t )
      (apropos-mode         :select t :align right :size 0.2)
      (help-mode            :select t :align right)
      (helpful-mode         :select t :align right :size 0.3)
@@ -1272,6 +1274,7 @@ speed-type
 #+begin_src emacs-lisp
 (use-package systemd)
 (use-package ahk-mode)
+(use-package bison-mode)
 #+end_src
 * language confguration
 ** org mode
@@ -1488,6 +1491,11 @@ vpn may cause this fail!
 #+begin_src emacs-lisp
 (use-package markdown-mode)
 (setq markdown-command "marked")
+
+#+end_src
+** haskell mode
+#+begin_src emacs-lisp
+(use-package haskell-mode)
 
 #+end_src
 
