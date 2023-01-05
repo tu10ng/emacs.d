@@ -1203,6 +1203,20 @@ cargo install git-delta
                      (prettify-symbols-mode 1))))
 
 #+end_src
+*** page-break-lines
+bug with `visula-line-mode', maybe use truncate-line, but truncate-line is ugly
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/site-lisp/page-break-lines/")
+(require 'page-break-lines)
+
+(dolist (hook '(prog-mode-hook
+                shell-mode-hook
+                text-mode-hook))
+  (add-hook hook #'(lambda ()
+                     (page-break-lines-mode))))
+
+#+end_src
+
 ** frivolities
 *** selectric
 Every so often, you want everyone else to /know/ that you're typing, or just to
@@ -1498,4 +1512,11 @@ vpn may cause this fail!
 (use-package haskell-mode)
 
 #+end_src
+
+
+
+
+
+
+
 
