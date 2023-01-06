@@ -418,7 +418,8 @@ delete directory name in one go
 **** lsp
 #+begin_src emacs-lisp
 (use-package eglot)
-(add-to-list 'completion-category-overrides '((eglot (styles orderless))))
+(add-to-list
+ 'completion-category-overrides '((eglot (styles orderless))))
 
 (use-package consult-eglot)
 
@@ -428,7 +429,8 @@ delete directory name in one go
                      'emacs-lisp-mode
                      'lisp-mode
                      'makefile-mode
-                     'c-mode)
+                     'c-mode
+                     'java-mode)
               (eglot-ensure))))
 #+end_src
 *** visual settings
@@ -492,6 +494,20 @@ if the buffer isn't a file, simply restart emacs."
       (restart-emacs (split-string (buffer-file-name)))
     (restart-emacs)))
 
+#+end_src
+*** close-paren
+#+begin_src emacs-lisp
+(defun tu10ng/close-paren ()
+  (interactive)
+  (let ((matching-delimiter nil))
+    (while (ignore-errors
+             (save-excursion
+               (backward-up-list 1)
+               (setq matching-delimiter (cdr (syntax-after (point)))))
+             t)
+      (insert-char matching-delimiter))))
+
+(global-set-key "\C-]" #'tu10ng/close-paren) 
 #+end_src
 *** restore session
 #+BEGIN_SRC emacs-lisp
@@ -1170,37 +1186,18 @@ cargo install git-delta
 #+begin_src emacs-lisp
 (use-package prettify-greek)
 (use-package prettify-math)
-(setq-default prettify-symbols-alist
-              (nconc prettify-greek-lower
-                      '(("#+BEGIN_SRC" . "✎")
-					    ("#+END_SRC" . "□")
-					    ("#+begin_src" . "✎")
-					    ("#+end_src" . "□")
-                        ("#+RESULTS:" . "⟾")
-					    ("[ ]" . "☐")
-                        ("[-]" . "🝕")
-					    ("[X]" . "🗹")
-					    ("#+begin_quote" . "»")
-					    ("#+end_quote" . "□")
-					    ("#+begin_verse" . "ζ")
-					    ("#+end_verse" . "□")
-					    ("#+begin_example" . "⟝")
-					    ("#+end_example" . "□")
-                        ("#+begin_export" . "🙵")
-                        ("#+end_export" . "□")
-                        ("#+END:" . "□")
-                        ("#+BEGIN:" . "✎")
-                        ("#+CAPTION:" . "✑")
-                        ("#+ATTR_LATEX" . "🄛")
-					    )))
 
-;; (global-prettify-symbols-mode 1)  ;; not working
-;; (global-prettify-math-mode)
+(setq-default
+ prettify-symbols-alist
+ prettify-greek-lower)
+
 (dolist (hook '(prog-mode-hook
                 shell-mode-hook
                 text-mode-hook))
-  (add-hook hook #'(lambda ()
-                     (prettify-symbols-mode 1))))
+  (add-hook hook
+            #'(lambda ()
+                (prettify-symbols-mode 1))
+            100))
 
 #+end_src
 *** page-break-lines
@@ -1216,7 +1213,6 @@ bug with `visula-line-mode', maybe use truncate-line, but truncate-line is ugly
                      (page-break-lines-mode))))
 
 #+end_src
-
 ** frivolities
 *** selectric
 Every so often, you want everyone else to /know/ that you're typing, or just to
@@ -1288,7 +1284,6 @@ speed-type
 #+begin_src emacs-lisp
 (use-package systemd)
 (use-package ahk-mode)
-(use-package bison-mode)
 #+end_src
 * language confguration
 ** org mode
@@ -1463,6 +1458,37 @@ symbol prettify is set [[*pretty symbol characters][pretty symbol characters]]
 #+begin_src emacs-lisp
 (setq org-ellipsis " ▾ "
       org-hide-leading-stars nil)
+
+(setq org-prettify-symbols-alist
+      (nconc
+       prettify-symbols-alist
+       '(("#+BEGIN_SRC" . "✎")
+         ("#+END_SRC" . "□")
+         ("#+begin_src" . "✎")
+         ("#+end_src" . "□")
+         ("#+RESULTS:" . "⟾")
+         ("[ ]" . "☐")
+         ("[-]" . "🝕")
+         ("[X]" . "🗹")
+         ("#+begin_quote" . "»")
+         ("#+end_quote" . "□")
+         ("#+begin_verse" . "ζ")
+         ("#+end_verse" . "□")
+         ("#+begin_example" . "⟝")
+         ("#+end_example" . "□")
+         ("#+begin_export" . "🙵")
+         ("#+end_export" . "□")
+         ("#+END:" . "□")
+         ("#+BEGIN:" . "✎")
+         ("#+CAPTION:" . "✑")
+         ("#+ATTR_LATEX" . "🄛"))))
+
+(add-hook 'org-mode-hook
+          #'(lambda ()
+              (setq prettify-symbols-alist
+                    org-prettify-symbols-alist)
+              (prettify-symbols-mode 1)))
+
 #+end_src
 **** org-appear
 #+begin_src emacs-lisp
@@ -1512,11 +1538,51 @@ vpn may cause this fail!
 (use-package haskell-mode)
 
 #+end_src
+** bison
+#+begin_src emacs-lisp
+(use-package bison-mode)
+(setq bison-prettify-symbols-alist 'nil)
+(add-hook 'bison-mode-hook
+          #'(lambda ()
+              (setq prettify-symbols-alist
+                        (nconc
+                         prettify-symbols-alist
+                         bison-prettify-symbols-alist))
+              (prettify-symbols-mode 1)))
+#+end_src
+** clojure
+#+begin_src emacs-lisp
+(use-package clojure-mode)
+(use-package cider)
 
+(setq cider-repl-wrap-history t)
 
+;; (add-to-list 'auto-mode-alist '("lein-env" . enh-ruby-mode))
+;; its says cider provided this
+;; (use-package clojure-mode-extra-font-locking)
 
+;; these help me out with the way I usually develop web apps
+;; (defun cider-start-http-server ()
+;;   (interactive)
+;;   (cider-load-current-buffer)
+;;   (let ((ns (cider-current-ns)))
+;;     (cider-repl-set-ns ns)
+;;     (cider-interactive-eval (format "(println '(def server (%s/start))) (println 'server)" ns))
+;;     (cider-interactive-eval (format "(def server (%s/start)) (println server)" ns))))
 
+;; (defun cider-refresh ()
+;;   (interactive)
+;;   (cider-interactive-eval (format "(user/reset)")))
 
+;; (defun cider-user-ns ()
+;;   (interactive)
+;;   (cider-repl-set-ns "user"))
 
-
+;; (eval-after-load 'cider
+;;   '(progn
+;;      (define-key clojure-mode-map (kbd "C-c C-v") 'cider-start-http-server)
+;;      (define-key clojure-mode-map (kbd "C-M-r") 'cider-refresh)
+;;      (define-key clojure-mode-map (kbd "C-c u") 'cider-user-ns)
+;;      (define-key cider-mode-map (kbd "C-c u") 'cider-user-ns)))
+#+end_src
 
