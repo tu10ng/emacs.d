@@ -10,3 +10,6 @@
 [submodule "site-lisp/pyim-tsinghua-dict"]
 	path = site-lisp/pyim-tsinghua-dict
 	url = git@github.com:redguardtoo/pyim-tsinghua-dict.git
+[submodule "site-lisp/thought-manage"]
+	path = site-lisp/thought-manage
+	url = git@github.com:tu10ng/thought-manage.git

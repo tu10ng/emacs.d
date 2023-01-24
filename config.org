@@ -15,6 +15,7 @@ please do not reward me credits if you find this config helpful.
 (setq smerge-command-prefix "\C-cv")
 
 (use-package exec-path-from-shell)
+(setq exec-path-from-shell-shell-name "fish")
 (exec-path-from-shell-initialize)
 #+end_src
 
@@ -65,6 +66,7 @@ Test some package
       y-or-n-p-use-read-key t
       read-char-choice-use-read-key t
       next-line-add-newlines t
+      dabbrev-case-replace nil
       )
 
 (put 'upcase-region    'disabled nil)
@@ -123,7 +125,7 @@ change though customisation interface will not add to =init.el=.
   (shackle-default-alignment 'bellow)
   (shackle-rules
    '((magit-status-mode    :select t :align right)
-     (magit-log-mode       :select t :align below :popup t :same nil)
+     (magit-log-mode       :select t :align below :popup t :same t)
      (magit-rev-mode       :select t :align right)
      ("*quickrun*"         :select t :other t)
      (profiler-report-mode :select t)
@@ -267,8 +269,6 @@ Thanks to Po Lu!
 (require 'treesit)
 ;; (setq treesit-extra-load-path '("/usr/bin/"))
 (when (treesit-available-p)
-  (push '(c++-mode . c++-ts-mode) major-mode-remap-alist)
-  (push '(c-mode . c-ts-mode) major-mode-remap-alist)
   (push '(css-mode . css-ts-mode) major-mode-remap-alist)
   (push '(python-mode . python-ts-mode) major-mode-remap-alist)
   (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
@@ -339,7 +339,7 @@ corfu will not be tangled with move commands
 (setq corfu-auto t
       corfu-quit-no-match t
       corfu-auto-delay 0
-      corfu-auto-prefix 0
+      corfu-auto-prefix 1
       corfu-cycle t
       corfu-excluded-modes '(org-mode)
       corfu-preselect-first nil
@@ -417,7 +417,8 @@ delete directory name in one go
 #+end_src
 **** lsp
 #+begin_src emacs-lisp
-(use-package eglot)
+;;(use-package eglot)
+(require 'eglot)
 (add-to-list
  'completion-category-overrides '((eglot (styles orderless))))
 
@@ -430,7 +431,11 @@ delete directory name in one go
                      'lisp-mode
                      'makefile-mode
                      'c-mode
-                     'java-mode)
+                     'java-mode
+                     'asm-mode
+;;                     'riscv-mode
+                     'lalrpop-mode
+                     )
               (eglot-ensure))))
 #+end_src
 *** visual settings
@@ -698,7 +703,7 @@ What a wonderful way to jump to buffer positions.
 #+begin_src emacs-lisp
 (use-package avy)
 (setq avy-all-windows t)
-(global-set-key (kbd "C-;") 'avy-goto-char-2)
+(global-set-key (kbd "C-;") 'avy-goto-char-in-line)
 #+end_src
 *** which-key
 #+begin_src emacs-lisp
@@ -868,7 +873,7 @@ Esc will be used to enter & leave normal mode
 
 (setq meow-cursor-type-insert '(block . 2))
 (meow-setup)
-(meow-global-mode 1)
+;;(meow-global-mode 1)
 #+end_src
 **** meow commands
 #+begin_src emacs-lisp
@@ -1056,16 +1061,6 @@ TODO: can eros's overlay stay if its not covering the cursor?
 
 
 #+end_src
-**** magit delta
-git diff syntax highlighter written in rust.
-#+begin_src shell
-cargo install git-delta
-#+end_src
-#+begin_src emacs-lisp
-(use-package magit-delta
-  :hook (magit-mode . magit-delta-mode))
-
-#+end_src
 **** git-add-commit-push
 #+begin_src emacs-lisp
 (defun aborn/magit-instant-commit ()
@@ -1074,9 +1069,11 @@ cargo install git-delta
   (magit-diff-unstaged)
   (magit-stage-modified)
   (magit-diff-staged)
-  (let ((msg (format-time-string
-              "commit by magit in emacs@%Y-%m-%d %H:%M:%S"
-              (current-time))))
+  (let ((msg (concat "commit by "
+                     (user-full-name)
+                     (format-time-string
+                      " in emacs@%Y-%m-%d %H:%M:%S"
+                      (current-time)))))
     (magit-call-git "commit" "-m" msg))
   (magit-refresh)
   (magit-mode-bury-buffer))
@@ -1284,6 +1281,9 @@ speed-type
 #+begin_src emacs-lisp
 (use-package systemd)
 (use-package ahk-mode)
+;; old & useless 
+;; (use-package riscv-mode)
+(use-package ebnf-mode)
 #+end_src
 * language confguration
 ** org mode
@@ -1460,7 +1460,7 @@ symbol prettify is set [[*pretty symbol characters][pretty symbol characters]]
       org-hide-leading-stars nil)
 
 (setq org-prettify-symbols-alist
-      (nconc
+      (append
        prettify-symbols-alist
        '(("#+BEGIN_SRC" . "✎")
          ("#+END_SRC" . "□")
@@ -1485,8 +1485,8 @@ symbol prettify is set [[*pretty symbol characters][pretty symbol characters]]
 
 (add-hook 'org-mode-hook
           #'(lambda ()
-              (setq prettify-symbols-alist
-                    org-prettify-symbols-alist)
+              (setq-local prettify-symbols-alist
+                          org-prettify-symbols-alist)
               (prettify-symbols-mode 1)))
 
 #+end_src
@@ -1527,6 +1527,13 @@ vpn may cause this fail!
 (use-package rust-mode)
 
 #+end_src
+*** lalrpop
+#+begin_src emacs-lisp
+(define-derived-mode lalrpop-mode rust-mode "Lalrpop")
+(add-to-list 'auto-mode-alist '("\\.lalrpop\\'" . lalrpop-mode))
+
+#+end_src
+
 ** markdown mode
 #+begin_src emacs-lisp
 (use-package markdown-mode)
@@ -1541,14 +1548,13 @@ vpn may cause this fail!
 ** bison
 #+begin_src emacs-lisp
 (use-package bison-mode)
-(setq bison-prettify-symbols-alist 'nil)
-(add-hook 'bison-mode-hook
-          #'(lambda ()
-              (setq prettify-symbols-alist
-                        (nconc
-                         prettify-symbols-alist
-                         bison-prettify-symbols-alist))
-              (prettify-symbols-mode 1)))
+;; (setq bison-prettify-symbols-alist
+;;       (append prettify-symbols-alist
+;;               '(("%%" . "%"))))
+;; (add-hook 'bison-mode-hook
+;;           #'(lambda ()
+;;               (setq-local prettify-symbols-alist
+;;                           bison-prettify-symbols-alist)))
 #+end_src
 ** clojure
 #+begin_src emacs-lisp
@@ -1584,5 +1590,22 @@ vpn may cause this fail!
 ;;      (define-key clojure-mode-map (kbd "C-M-r") 'cider-refresh)
 ;;      (define-key clojure-mode-map (kbd "C-c u") 'cider-user-ns)
 ;;      (define-key cider-mode-map (kbd "C-c u") 'cider-user-ns)))
+#+end_src
+** thought-manage
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/site-lisp/thought-manage/")
+(require 'thought-manage)
+(setq thought-manage-disable-auto-remove-blank-line t)
+#+end_src
+** llvm mode
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/site-lisp/llvm-utils/")
+(require 'llvm-mode)
+
+#+end_src
+** ocaml
+#+begin_src emacs-lisp
+(use-package tuareg)
+
 #+end_src
 
