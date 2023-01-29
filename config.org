@@ -345,6 +345,8 @@ corfu will not be tangled with move commands
       corfu-preselect-first nil
       )
 
+(run-with-idle-timer 1 t #'corfu-quit)
+
 (global-corfu-mode 1)
 #+end_src
 corfu documentation
