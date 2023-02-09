@@ -13,3 +13,6 @@
 [submodule "site-lisp/thought-manage"]
 	path = site-lisp/thought-manage
 	url = git@github.com:tu10ng/thought-manage.git
+[submodule "site-lisp/rainbow-cursor"]
+	path = site-lisp/rainbow-cursor
+	url = git@github.com:tu10ng/rainbow-cursor.git

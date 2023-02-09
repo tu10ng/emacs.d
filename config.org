@@ -37,6 +37,7 @@ Test some package
 
 (setq undo-limit 80000000
       help-at-pt-display-when-idle t
+      show-paren-highlight-openparen nil
       bookmark-set-fringe-mark nil
       sentence-end-double-space nil
       delete-by-moving-to-trash t 
@@ -178,7 +179,7 @@ change though customisation interface will not add to =init.el=.
 (use-package gcmh)
 (setq gcmh-idle-delay 'auto
       gcmh-auto-idle-delay-factor 10
-      gcmh-high-cons-threshold (* 200 1024 1024))
+      gcmh-high-cons-threshold (* 3 1024 1024 1024))
 (gcmh-mode 1)
 
 
@@ -310,7 +311,7 @@ Thanks to Po Lu!
                                   ;; orderless-flex
                                   orderless-initialism
                                   orderless-prefixes))
-                                  
+
 #+end_src
 **** capf
 ***** corfu
@@ -322,20 +323,20 @@ corfu will not be tangled with move commands
 (use-package corfu
   :bind
   (:map corfu-map
-   ([remap next-line] . nil)
-   ([remap previous-line] . nil)
-   ([remap newline] . nil)
-   ([remap beginning-of-buffer] . nil)
-   ([remap end-of-buffer] . nil)
-   ("RET" . nil)
-   ([ret] . nil)
-   ("M-p" . nil)
-   ("M-n" . nil)
-   ("TAB" . corfu-next)
-   ([tab] . corfu-next)
-   ("S-TAB" . corfu-previous)
-   ([backtab] . corfu-previous)))
- 
+        ([remap next-line] . nil)
+        ([remap previous-line] . nil)
+        ([remap newline] . nil)
+        ([remap beginning-of-buffer] . nil)
+        ([remap end-of-buffer] . nil)
+        ("RET" . nil)
+        ([ret] . nil)
+        ("M-p" . nil)
+        ("M-n" . nil)
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous)))
+
 (setq corfu-auto t
       corfu-quit-no-match t
       corfu-auto-delay 0
@@ -345,7 +346,7 @@ corfu will not be tangled with move commands
       corfu-preselect-first nil
       )
 
-(run-with-idle-timer 1 t #'corfu-quit)
+;; (run-with-idle-timer 1 t #'corfu-quit)
 
 (global-corfu-mode 1)
 #+end_src
@@ -435,7 +436,7 @@ delete directory name in one go
                      'c-mode
                      'java-mode
                      'asm-mode
-;;                     'riscv-mode
+                     ;;                     'riscv-mode
                      'lalrpop-mode
                      )
               (eglot-ensure))))
@@ -488,6 +489,13 @@ loading theme is remarkably slow
         ("https" . "127.0.0.1:8889"))
       )
 #+end_src
+*** eww, browse url, browser
+#+begin_src emacs-lisp
+(setq browse-url-browser-function #'eww-browse-url)
+
+
+#+end_src
+
 ** other things
 *** editor interaction
 *** restart emacs
@@ -515,6 +523,11 @@ if the buffer isn't a file, simply restart emacs."
       (insert-char matching-delimiter))))
 
 (global-set-key "\C-]" #'tu10ng/close-paren) 
+(global-set-key (kbd "<C-return>") #'(lambda ()
+                                       (interactive)
+                                       (tu10ng/close-paren)
+                                       (tu10ng/open-below)))
+
 #+end_src
 *** restore session
 #+BEGIN_SRC emacs-lisp
@@ -971,7 +984,7 @@ Esc will be used to enter & leave normal mode
 
 (use-package smart-hungry-delete
   :bind (("<backspace>" . smart-hungry-delete-backward-char)
-              ("C-d" . smart-hungry-delete-forward-char)))
+         ("C-d" . smart-hungry-delete-forward-char)))
 
 
 #+end_src
@@ -982,6 +995,15 @@ Delete selection when we type or paste.
   :config
   (delete-selection-mode))
 
+#+end_src
+*** shebang
+#+begin_src emacs-lisp
+(defun tu10ng/shebang (program)
+  "insert '#!/usr/bin/program'"
+  (interactive "sProgram name: ")
+  (insert "#!")
+  (shell-command (concat "which " program) t)
+  (next-line))
 #+end_src
 ** tools
 *** consult
@@ -1228,49 +1250,8 @@ amuse oneself. Introducing: typewriter sounds!
 #+end_src
 *** rainbow cursor
 #+begin_src emacs-lisp
-(blink-cursor-mode -1)
-(set-cursor-color "gold")
-
-(defvar rainbow-cursor-timer nil)
-(setq rainbow-cursor-color-list (vector"#FF0000";red
-		                               "#FF5000"
-		                               "#FF9F00";orange
-		                               "#FFFF00";yellow
-		                               "#BFFF00"
-		                               "#00FF00";green
-		                               "#00FFFF";
-		                               "#0088FF"
-		                               "#0000FF";blue
-		                               "#5F00FF"
-		                               "#8B00FF";purple
-		                               "#CF00FF"
-		                               "#FF0088"
-		                               ))
-(setq rainbow-cursor-color-pointer 1)
-(defun rainbow-cursor-change-color ()
-  "Take a color from `rainbow-color-list' by the pointer.
-The pointer moves by +1, and restore by taking mod.  "
-  (setq rainbow-cursor-color-pointer (% (1+ rainbow-cursor-color-pointer)
-				                        (length rainbow-cursor-color-list)))
-  (set-cursor-color (elt rainbow-cursor-color-list
-                         rainbow-cursor-color-pointer)))
-
-
-(defun rainbow-cursor-disable ()
-  ""
-  (interactive)
-  (when rainbow-cursor-timer
-    (cancel-timer rainbow-cursor-timer)
-    (setq rainbow-cursor-timer nil)))
-
-(defun rainbow-cursor-enable ()
-  ""
-  (interactive)
-  (rainbow-cursor-disable)
-  (setq rainbow-cursor-timer
-        (run-with-timer 0 0.05 #'rainbow-cursor-change-color)))
-
-(rainbow-cursor-enable)
+(add-to-list 'load-path "~/.emacs.d/site-lisp/rainbow-cursor/")
+(require 'rainbow-cursor)
 
 #+end_src
 *** typing game
@@ -1278,6 +1259,10 @@ speed-type
 #+begin_src emacs-lisp
 (use-package speed-type)
 
+#+end_src
+*** try
+#+begin_src emacs-lisp
+(use-package try)
 #+end_src
 ** file types
 #+begin_src emacs-lisp
@@ -1399,6 +1384,12 @@ I think it makes sense to have list bullets change with depth
 (org-babel-do-load-languages 'org-babel-load-languages
 			                 '((emacs-lisp . t)))
 #+end_src
+***** org tempo
+#+begin_src emacs-lisp
+(add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
+
+;;(setf (cdr (assoc "e" org-structure-template-alist)) "src emacs-lisp")
+#+end_src
 *** visuals
 **** org modern indent
 #+begin_src emacs-lisp
@@ -1445,7 +1436,7 @@ responsive.
 #+begin_src emacs-lisp
 (defun locally-defer-font-lock ()
   "Set jit-lock defer and stealth, when buffer is over a certain size."
-  (when (> (buffer-size) 50000)
+  (when (> (buffer-size) 100000)
     (setq-local jit-lock-defer-time 0.05
                 jit-lock-stealth-time 1
                 org-indent-mode nil)))
@@ -1535,7 +1526,6 @@ vpn may cause this fail!
 (add-to-list 'auto-mode-alist '("\\.lalrpop\\'" . lalrpop-mode))
 
 #+end_src
-
 ** markdown mode
 #+begin_src emacs-lisp
 (use-package markdown-mode)
@@ -1559,12 +1549,61 @@ vpn may cause this fail!
 ;;                           bison-prettify-symbols-alist)))
 #+end_src
 ** clojure
+*** for syntax support
 #+begin_src emacs-lisp
 (use-package clojure-mode)
+
+(setq clojure-toplevel-inside-comment-form t)
+
+(with-eval-after-load "clojure-mode"
+  (define-clojure-indent
+   (re-frame/reg-event-fx :defn)
+   (re-frame/reg-event-db :defn)
+   (re-frame/reg-sub :defn)
+   (re-frame/reg-fx :defn)
+   (t/async :defn)
+   (thrown-with-msg? :defn)))
+
+#+end_src
+
+#+begin_src emacs-lisp
+;; (defface tu10ng/clojure-square-bracket-face
+;;   '((t :foreground "red"
+;;        :slant italic
+;;        ))
+;;   "face for square bracket because it confuses with round braces")
+
+(add-hook 'clojure-mode-hook
+          (lambda ()
+            (font-lock-add-keywords nil
+                                    '(("\\[" . 'italic)
+                                      ("\\]" . 'italic)))))
+
+#+end_src
+*** repl connection
+#+begin_src emacs-lisp
 (use-package cider)
 
-(setq cider-repl-wrap-history t)
+(autoload 'cider-jack-in "cider" nil t)
 
+(setq cider-repl-wrap-history t)
+(setq cider-offer-to-open-cljs-app-in-browser nil)
+
+(define-key cider-mode-map (kbd "C-c C-c") #'cider-load-buffer)
+
+#+end_src
+**** format code
+https://github.com/DogLooksGood/zprint.el
+https://github.com/kkinnear/zprint
+#+begin_src emacs-lisp
+;; (with-eval-after-load "cider"
+;;   (define-key cider-mode-map (kbd "C-c C-f") nil))
+
+
+
+#+end_src
+*** misc
+#+begin_src emacs-lisp
 ;; (add-to-list 'auto-mode-alist '("lein-env" . enh-ruby-mode))
 ;; its says cider provided this
 ;; (use-package clojure-mode-extra-font-locking)
@@ -1592,6 +1631,38 @@ vpn may cause this fail!
 ;;      (define-key clojure-mode-map (kbd "C-M-r") 'cider-refresh)
 ;;      (define-key clojure-mode-map (kbd "C-c u") 'cider-user-ns)
 ;;      (define-key cider-mode-map (kbd "C-c u") 'cider-user-ns)))
+
+#+end_src
+
+** common lisp(cl)
+(use-package slime)
+(setq inferior-lisp-program (executable-find "sbcl"))
+(define-key slime-mode-map (kbd "C-c C-c") #'slime-eval-buffer)
+
+#+begin_src emacs-lisp
+(use-package sly)
+(setq inferior-lisp-program "sbcl"
+      sly-db-focus-debugger t)
+(define-key sly-mode-map (kbd "C-c b") #'sly-eval-buffer)
+(define-key sly-editing-mode-map (kbd "M-p") #'nil)
+(define-key sly-editing-mode-map (kbd "M-n") #'nil)
+
+;; minor fix on the format string
+(defun common-lisp-glossary-6.0 (term)
+  "Get a URL for a glossary term TERM."
+  (let ((anchor (gethash term common-lisp-hyperspec--glossary-terms)))
+    (if (not anchor)
+	(message "Unknown glossary term: %s" term)
+      (format "%sBody/26_glo_%s.htm"
+	      common-lisp-hyperspec-root
+	      (let ((char (string-to-char term)))
+		(if (and (<= ?a char)
+			 (<= char ?z))
+		    (make-string 1 char)
+		  "9"))
+	      anchor))))
+
+
 #+end_src
 ** thought-manage
 #+begin_src emacs-lisp
