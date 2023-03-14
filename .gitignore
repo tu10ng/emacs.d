@@ -17,3 +17,5 @@
 /tree-sitter-module/
 /tree-sitter/
 /session*
+/.org-id-locations
+/.cask/
