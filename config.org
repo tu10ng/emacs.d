@@ -320,7 +320,8 @@ Thanks to Po Lu!
 only use TAB and S-TAB to select candidate and auto insert
 corfu will not be tangled with move commands
 #+begin_src emacs-lisp
-(setq tab-always-indent 'complete)
+;; TODO
+;; (setq tab-always-indent 'complete)
 
 (use-package corfu
   :bind
@@ -433,11 +434,13 @@ delete directory name in one go
           (lambda ()
             (unless (derived-mode-p
                      'emacs-lisp-mode
+                     'racket-mode
                      'lisp-mode
                      'makefile-mode
                      'c-mode
                      'java-mode
                      'asm-mode
+                     'nasm-mode
                      ;;                     'riscv-mode
                      'lalrpop-mode
                      )
@@ -1840,6 +1843,13 @@ vpn may cause this fail!
 #+begin_src emacs-lisp
 (add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
 #+end_src
+** nasm mode
+#+begin_src emacs-lisp
+(use-package nasm-mode)
+(add-to-list 'auto-mode-alist '("\\.nasm\\'" . nasm-mode))
+
+
+#+end_src
 ** rust mode
 #+begin_src emacs-lisp
 (use-package rust-mode)
@@ -2055,5 +2065,11 @@ https://github.com/kkinnear/zprint
 *** compilation
 #+begin_src emacs-lisp
 
+#+end_src
+** racket
+#+begin_src emacs-lisp
+(use-package racket-mode)
+(require 'racket-xp)
+(add-hook 'racket-mode-hook #'racket-xp-mode)
 #+end_src
 

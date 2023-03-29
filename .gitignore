@@ -19,3 +19,4 @@
 /session*
 /.org-id-locations
 /.cask/
+/racket-mode/
