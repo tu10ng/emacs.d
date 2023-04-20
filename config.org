@@ -17,6 +17,7 @@ please do not reward me credits if you find this config helpful.
 (use-package exec-path-from-shell)
 (setq exec-path-from-shell-shell-name "bash")
 (exec-path-from-shell-initialize)
+
 #+end_src
 
 Test some package
@@ -180,8 +181,8 @@ change though customisation interface will not add to =init.el=.
 #+begin_src emacs-lisp
 (use-package gcmh)
 (setq gcmh-idle-delay 'auto
-      gcmh-auto-idle-delay-factor 10
-      gcmh-high-cons-threshold (* 3 1024 1024 1024))
+      gcmh-auto-idle-delay-factor 100
+      gcmh-high-cons-threshold (* 10 1024 1024 1024))
 (gcmh-mode 1)
 
 
@@ -195,8 +196,8 @@ change though customisation interface will not add to =init.el=.
 #+end_src
 *** byte compile
 #+begin_src emacs-lisp
-(setq load-prefer-newer t)
-(native-compile-prune-cache)
+;; (setq load-prefer-newer t)
+;; (native-compile-prune-cache)
 
 #+end_src
 *** mouse 
@@ -296,6 +297,13 @@ Thanks to Po Lu!
 (global-set-key "\M-n" #'forward-paragraph)
 (global-set-key "\M-[" #'backward-sexp)
 (global-set-key "\M-]" #'forward-sexp)
+
+;; TODO uncomment line
+(global-set-key (kbd "C-;")
+                (lambda ()
+                  (interactive)
+                  (comment-region (line-beginning-position)
+                                  (line-end-position))))
 
 #+end_src
 ** emacs configuration
@@ -445,6 +453,10 @@ delete directory name in one go
                      'lalrpop-mode
                      )
               (eglot-ensure))))
+
+;; (use-package lsp-pyright
+;;   :hook (python-mode . (lambda ()
+;;                          (require 'lsp-pyright))))
 #+end_src
 *** visual settings
 **** font
@@ -816,7 +828,7 @@ What a wonderful way to jump to buffer positions.
 #+begin_src emacs-lisp
 (use-package avy)
 (setq avy-all-windows t)
-(global-set-key (kbd "C-;") 'avy-goto-char-in-line)
+(global-set-key (kbd "C-M-;") 'avy-goto-char-in-line)
 #+end_src
 *** which-key
 #+begin_src emacs-lisp
@@ -1284,6 +1296,8 @@ TODO: can eros's overlay stay if its not covering the cursor?
 #+end_src
 *** dictionary
 #+begin_src emacs-lisp
+(require 'popup)
+
 (use-package youdao-dictionary
   :bind (("M-s" . youdao-dictionary-search-at-point+)))
 
@@ -1413,11 +1427,11 @@ amuse oneself. Introducing: typewriter sounds!
 (setq wakatime-disable-on-error t)
 (global-wakatime-mode 1)
 #+end_src
-*** rainbow cursor
+*** rgb cursor
 #+begin_src emacs-lisp
-(add-to-list 'load-path "~/.emacs.d/site-lisp/rainbow-cursor/")
-(require 'rainbow-cursor)
-
+(add-to-list 'load-path "~/.emacs.d/site-lisp/rgb-cursor/")
+(require 'rgb-cursor)
+(rgb-cursor-mode 1)
 #+end_src
 *** typing game
 speed-type
@@ -1429,13 +1443,14 @@ speed-type
 #+begin_src emacs-lisp
 (use-package try)
 #+end_src
-*** TODO screenshot
+*** screenshot
 git@github.com:tecosaur/screenshot.git
 #+begin_src emacs-lisp
-(use-package posframe)
-(add-to-list 'load-path "~/.emacs.d/site-lisp/screenshot/")
-(require 'screenshot)
+;; (use-package posframe)
+;; (add-to-list 'load-path "~/.emacs.d/site-lisp/screenshot/")
+;; (require 'screenshot)
 #+end_src
+
 ** file types
 #+begin_src emacs-lisp
 (tu10ng/use-package-multi
@@ -1833,7 +1848,12 @@ vpn may cause this fail!
 #+end_src
 ** python
 #+begin_src emacs-lisp
-;; black and yapf not found?
+(use-package python-black)
+;; wierd mode map
+(define-key python-base-mode-map (kbd "C-M-\\") #'python-black-buffer)
+
+;; (define-key python-mode-map [remap indent-buffer] #'python-black-buffer)
+
 #+end_src
 ** makefile
 #+begin_src emacs-lisp

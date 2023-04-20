@@ -6,7 +6,8 @@
 	    ("org"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")))
 (package-initialize)
 (require 'use-package)
-(setq use-package-always-ensure t)
+(setq use-package-always-ensure t
+      use-package-always-demand t)
 
 ;; (setq debug-on-error t)
 ;; Adjust garbage collection thresholds during startup, and thereafter
