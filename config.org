@@ -334,11 +334,17 @@ corfu will not be tangled with move commands
 (use-package corfu
   :bind
   (:map corfu-map
+        ([remap move-beginning-of-line] . nil)
+        ([remap move-end-of-line] . nil)
+        ([remap beginning-of-buffer] . nil)
+        ([remap end-of-buffer] . nil)
+        ([remap scroll-down-command] . nil)
+        ([remap scroll-up-command] . nil)
         ([remap next-line] . nil)
         ([remap previous-line] . nil)
         ([remap newline] . nil)
-        ([remap beginning-of-buffer] . nil)
-        ([remap end-of-buffer] . nil)
+        ("C-a" . nil)
+        ("C-e" . nil)
         ("RET" . nil)
         ([ret] . nil)
         ("M-p" . nil)
@@ -370,8 +376,12 @@ corfu documentation
 #+end_src
 ***** cape
 #+begin_src emacs-lisp
-(use-package cape)
-(add-to-list 'completion-at-point-functions #'cape-file)
+(use-package cape
+  :commands (cape-file cape-dabbrev)
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev))
+
 #+end_src
 **** vertico
 ***** vertico common
@@ -1091,11 +1101,16 @@ Esc will be used to enter & leave normal mode
 #+end_src
 *** smart-hungry-delete
 #+begin_src emacs-lisp
-
 (use-package smart-hungry-delete
-  :bind (("<backspace>" . smart-hungry-delete-backward-char)
-         ("C-d" . smart-hungry-delete-forward-char)))
-
+  :bind
+  (:map prog-mode-map
+        (("<backspace>" . smart-hungry-delete-backward-char)
+         (("C-d" . smart-hungry-delete-forward-char))))
+  (:map text-mode-map
+        (("<backspace>" . smart-hungry-delete-backward-char)
+         (("C-d" . smart-hungry-delete-forward-char))))
+  :init
+  (smart-hungry-delete-add-default-hooks))
 
 #+end_src
 *** delsel
@@ -1115,35 +1130,8 @@ Delete selection when we type or paste.
   (shell-command (concat "which " program) t)
   (next-line))
 #+end_src
-*** TODO auto-insert
-need insert different thing for major mode 
-#+begin_src emacs-lisp
-(defvar auto-insert-alist
-  '((?# . ?'))
-  "List of charactesr to insert spaces after")
-
-(defun auto-insert ()
-  (let ((res (assoc (char-before)
-                    auto-insert-alist)))
-    (when res
-      (insert (cdr res)))))
-
-(define-minor-mode auto-insert-mode
-  "Automatically insert char after certain char in specific modes."
-  :init-value nil
-  :lighter "._a"
-  :keymap nil
-  (make-variable-buffer-local 'post-self-insert-hook)
-  (if auto-insert-mode
-      (add-hook 'post-self-insert-hook 'auto-insert)
-    (remove-hook 'post-self-insert-hook 'auto-insert)))
-
-(dolist (hook '(emacs-lisp-mode-hook))
-  (add-hook hook
-            #'(lambda ()
-                (auto-insert-mode 1))))
-
-#+end_src
+*** auto-insert
+it is hard to correct insert without lookahead, like we shouldnt call auto-insert when handle like '#' appears in string
 *** electric-operator
 #+begin_src emacs-lisp
 ;; (use-package electric-operator)
