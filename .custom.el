@@ -4,12 +4,16 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(connection-local-criteria-alist
-   '(((:application tramp)
+   '(((:application tramp :protocol "flatpak")
+      tramp-container-connection-local-default-flatpak-profile)
+     ((:application tramp)
       tramp-connection-local-default-system-profile tramp-connection-local-default-shell-profile)
      ((:application eshell)
       eshell-connection-default-profile)))
  '(connection-local-profile-alist
-   '((tramp-connection-local-darwin-ps-profile
+   '((tramp-container-connection-local-default-flatpak-profile
+      (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin"))
+     (tramp-connection-local-darwin-ps-profile
       (tramp-process-attributes-ps-args "-acxww" "-o" "pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state=abcde" "-o" "ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
       (tramp-process-attributes-ps-format
        (pid . number)
@@ -85,7 +89,7 @@
       (eshell-path-env-list))))
  '(magit-todos-insert-after '(bottom) nil nil "Changed by setter of obsolete option `magit-todos-insert-at'")
  '(package-selected-packages
-   '(lsp-pyright nasm-mode racket-mode pdf-tools iscroll graphviz-dot-mode cdlatex auctex lox-mode posframe electric-operator try tuareg ebnf-mode ebnf clojure-mode-extra-font-locking bison-mode exec-path-from-shell smart-hungry-delete benchmark-init ox-reveal helpful move-text consult-dir youdao-dictionary doom-modeline ahk-mode vertico-directory fish-mode fish python-black py-yapf yapfify all-the-icons org-super-agenda valign org-appear shackle wakatime-mode restart-emacs pyim-basedict prettify-math prettify-greek rainbow-delimiters gcmh selectric-mode selectic-mode info-colors magit-delta which-key avy module))
+   '(flycheck devdocs groovy-mode lsp-pyright nasm-mode racket-mode pdf-tools iscroll graphviz-dot-mode cdlatex auctex lox-mode posframe electric-operator try tuareg ebnf-mode ebnf clojure-mode-extra-font-locking bison-mode exec-path-from-shell smart-hungry-delete benchmark-init ox-reveal helpful move-text consult-dir youdao-dictionary doom-modeline ahk-mode vertico-directory fish-mode fish python-black py-yapf yapfify all-the-icons org-super-agenda valign org-appear shackle wakatime-mode restart-emacs pyim-basedict prettify-math prettify-greek rainbow-delimiters gcmh selectric-mode selectic-mode info-colors magit-delta which-key avy module))
  '(safe-local-variable-values '((checkdoc-minor-mode . t)))
  '(wakatime-api-key "c2a0b2a6-ab7d-4af3-bfbc-0924271ecbb6")
  '(wakatime-cli-path "/usr/bin/wakatime-cli"))

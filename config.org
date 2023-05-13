@@ -270,14 +270,14 @@ Thanks to Po Lu!
 #+end_src
 *** treesitter
 #+begin_src emacs-lisp
-(require 'treesit)
-;; (setq treesit-extra-load-path '("/usr/bin/"))
-(when (treesit-available-p)
-  (push '(css-mode . css-ts-mode) major-mode-remap-alist)
-  (push '(python-mode . python-ts-mode) major-mode-remap-alist)
-  (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
-  (push '(js-json-mode . json-ts-mode) major-mode-remap-alist)
-  (push '(typescript-mode . typescript-ts-mode) major-mode-remap-alist))
+;; (require 'treesit)
+;; ;; (setq treesit-extra-load-path '("/usr/bin/"))
+;; (when (treesit-available-p)
+;;   (push '(css-mode . css-ts-mode) major-mode-remap-alist)
+;;   (push '(python-mode . python-ts-mode) major-mode-remap-alist)
+;;   (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
+;;   (push '(js-json-mode . json-ts-mode) major-mode-remap-alist)
+;;   (push '(typescript-mode . typescript-ts-mode) major-mode-remap-alist))
 #+end_src
 *** tmp keybinds
 #+begin_src emacs-lisp
@@ -361,11 +361,14 @@ corfu will not be tangled with move commands
       corfu-cycle t
       corfu-excluded-modes '(org-mode)
       corfu-preselect 'prompt
+      ;; https://emacs-china.org/t/corfu-tab-and-go-eglot-snippet/24473
+      ;; still have problem when writing rust
+      ;; corfu-on-exact-match nil
+      ;; eglot-stay-out-of '(yasnippet)
       )
 
-;; (run-with-idle-timer 1 t #'corfu-quit)
-
 (global-corfu-mode 1)
+
 #+end_src
 corfu documentation
 #+begin_src emacs-lisp
@@ -441,14 +444,14 @@ delete directory name in one go
 #+end_src
 **** lsp
 #+begin_src emacs-lisp
-;;(use-package eglot)
-(require 'eglot)
+(use-package eglot)
+;; (require 'eglot)
 (add-to-list
  'completion-category-overrides '((eglot (styles orderless))))
 
 (use-package consult-eglot)
 
-(add-hook 'prog-mode-hook
+(add-hook 'prog-mode-hook               ;eglot
           (lambda ()
             (unless (derived-mode-p
                      'emacs-lisp-mode
@@ -456,17 +459,15 @@ delete directory name in one go
                      'lisp-mode
                      'makefile-mode
                      'c-mode
-                     'java-mode
                      'asm-mode
                      'nasm-mode
-                     ;;                     'riscv-mode
-                     'lalrpop-mode
+                     'verilog-mode
                      )
               (eglot-ensure))))
 
-;; (use-package lsp-pyright
-;;   :hook (python-mode . (lambda ()
-;;                          (require 'lsp-pyright))))
+(add-hook 'lalrpop-mode-hook
+          #'(lambda () (eglot--managed-mode-off)))
+
 #+end_src
 *** visual settings
 **** font
@@ -604,11 +605,12 @@ things you want byte-compiled in them! Like function/macro definitions."
 
 #+end_src
 *** proxy
+comment out, uses v2raya's transparent proxy
 #+begin_src emacs-lisp
-(setq url-proxy-services
-      '(("http" . "127.0.0.1:8889")
-        ("https" . "127.0.0.1:8889"))
-      )
+;; (setq url-proxy-services
+;;       '(("http" . "127.0.0.1:8889")
+;;         ("https" . "127.0.0.1:8889"))
+;;       )
 #+end_src
 *** eww, browse url, browser
 #+begin_src emacs-lisp
@@ -1194,7 +1196,8 @@ TODO: can eros's overlay stay if its not covering the cursor?
 *** magit
 #+begin_src emacs-lisp
 (use-package magit)
-(setq magit-commit-ask-to-stage nil)
+(setq magit-commit-ask-to-stage nil
+      magit-save-repository-buffers 'dontask)
 (add-to-list 'magit-no-confirm 'stage-all-changes)
 #+end_src
 **** show git log in commit buffer to help writing commit
@@ -1294,6 +1297,12 @@ TODO: can eros's overlay stay if its not covering the cursor?
 #+begin_src emacs-lisp
 (use-package tldr
   :bind ("C-c t" . tldr))
+
+#+end_src
+*** devdocs
+#+begin_src emacs-lisp
+(use-package devdocs
+  :bind ("C-c b" . devdocs-lookup))
 
 #+end_src
 *** pdf-tools / doc-view
@@ -1438,7 +1447,6 @@ git@github.com:tecosaur/screenshot.git
 ;; (add-to-list 'load-path "~/.emacs.d/site-lisp/screenshot/")
 ;; (require 'screenshot)
 #+end_src
-
 ** file types
 #+begin_src emacs-lisp
 (tu10ng/use-package-multi
@@ -1447,6 +1455,7 @@ git@github.com:tecosaur/screenshot.git
  ebnf-mode
  lox-mode
  graphviz-dot-mode
+ groovy-mode
  )
 
 ;; (use-package systemd)
@@ -1821,7 +1830,6 @@ theres already a default value
 #+end_src
 **** html
 ***** latex
-
 **** reveal
 By default reveal is rather nice, there are just a few tweaks that I consider a
 good idea.
@@ -1861,7 +1869,7 @@ vpn may cause this fail!
 ** rust mode
 #+begin_src emacs-lisp
 (use-package rust-mode)
-
+(define-key rust-mode-map (kbd "C-M-\\") #'rust-format-buffer)
 #+end_src
 *** lalrpop
 #+begin_src emacs-lisp
@@ -2079,5 +2087,19 @@ https://github.com/kkinnear/zprint
 (use-package racket-mode)
 (require 'racket-xp)
 (add-hook 'racket-mode-hook #'racket-xp-mode)
+#+end_src
+** verilog
+#+begin_src emacs-lisp
+;; (add-to-list 'eglot-server-programs
+;;              '(verilog-mode . ("svlangserver" "--stdio")))
+;; (setq verilog-linter "verible-verilog-lint")
+;; (with-eval-after-load verilog-mode
+  (require 'flycheck)
+  (add-hook 'verilog-mode-hook #'flycheck-mode)
+  (define-key flycheck-mode-map (kbd "M-g p") #'flycheck-previous-error)
+  (define-key flycheck-mode-map (kbd "M-g M-p") #'flycheck-previous-error)
+  (define-key flycheck-mode-map (kbd "M-g n") #'flycheck-next-error)
+  (define-key flycheck-mode-map (kbd "M-g M-n") #'flycheck-next-error)
+
 #+end_src
 
