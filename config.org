@@ -285,8 +285,7 @@ Thanks to Po Lu!
 (global-set-key (kbd "M-u") (lambda (ARG) (interactive "p") (upcase-word (- ARG))))
 (global-set-key (kbd "M-c") (lambda (ARG) (interactive "p") (capitalize-word (- ARG))))
 
-(global-set-key (kbd "C-x k") 'kill-this-buffer)
-(global-set-key "\C-r" #'query-replace)
+(global-set-key "\C-r" #'query-replace-regexp)
 (global-set-key "\M-z" #'zap-up-to-char)
 
 (global-set-key "\C-ct" #'tldr)
@@ -298,12 +297,7 @@ Thanks to Po Lu!
 (global-set-key "\M-[" #'backward-sexp)
 (global-set-key "\M-]" #'forward-sexp)
 
-;; TODO uncomment line
-(global-set-key (kbd "C-;")
-                (lambda ()
-                  (interactive)
-                  (comment-region (line-beginning-position)
-                                  (line-end-position))))
+(global-set-key (kbd "C-;") #'comment-line)
 
 #+end_src
 ** emacs configuration
@@ -380,10 +374,9 @@ corfu documentation
 ***** cape
 #+begin_src emacs-lisp
 (use-package cape
-  :commands (cape-file cape-dabbrev)
+  :commands (cape-file)
   :init
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev))
+  (add-to-list 'completion-at-point-functions #'cape-file))
 
 #+end_src
 **** vertico
@@ -651,6 +644,13 @@ if the buffer isn't a file, simply restart emacs."
                                        (tu10ng/open-below)))
 
 #+end_src
+*** C-xk kill-buffer
+#+begin_src emacs-lisp
+(advice-add 'kill-this-buffer :after #'delete-window)
+
+(global-set-key (kbd "C-x k") 'kill-this-buffer)
+#+end_src
+
 *** restore session
 #+BEGIN_SRC emacs-lisp
 ;; Back to the previous position
@@ -1126,10 +1126,11 @@ Delete selection when we type or paste.
 *** shebang
 #+begin_src emacs-lisp
 (defun tu10ng/shebang (program)
-  "insert '#!/usr/bin/program'"
+  "insert '#!/usr/bin/env PROGRAM'"
   (interactive "sProgram name: ")
-  (insert "#!")
-  (shell-command (concat "which " program) t)
+  (insert "#!/usr/bin/env ")
+  ;; (shell-command (concat "which " program) t)
+  (insert program)
   (next-line))
 #+end_src
 *** auto-insert
