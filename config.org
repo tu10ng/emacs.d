@@ -353,7 +353,7 @@ only use TAB and S-TAB to select candidate and auto insert
 corfu will not be tangled with move commands
 #+begin_src emacs-lisp
 ;; TODO
-;; (setq tab-always-indent 'complete)
+(setq tab-always-indent 'complete)
 
 (use-package corfu
   :bind
@@ -383,7 +383,7 @@ corfu will not be tangled with move commands
       corfu-auto-delay 0
       corfu-auto-prefix 1
       corfu-cycle t
-      corfu-excluded-modes '(org-mode)
+      corfu-excluded-modes '(org-mode slime-repl-mode)
       corfu-preselect 'prompt
       ;; https://emacs-china.org/t/corfu-tab-and-go-eglot-snippet/24473
       ;; still have problem when writing rust
@@ -407,6 +407,51 @@ corfu documentation
   :commands (cape-file)
   :init
   (add-to-list 'completion-at-point-functions #'cape-file))
+
+#+end_src
+***** company
+#+begin_src emacs-lisp
+(use-package company
+  :hook (slime-repl-mode . global-company-mode)
+  ;; :bind
+  ;; (:map company-active-map
+  ;;       ("TAB" . company-select-next-or-abort)
+  ;;       ("<backtab>" . company-select-previous-or-abort)
+  ;;       ("<tab>" . nil)
+  ;;       ("RET" . nil)
+  ;;       ("<return>" . nil)
+  ;;       ("C-p" . nil)
+  ;;       ("C-n" . nil)
+  ;;       ("C-s" . nil)
+  ;;       ("C-h" . nil)
+  ;;       ("C-v" . nil)
+  ;;       ([remap scroll-up-command] . nil)
+  ;;       ([remap scroll-down-command] . nil)
+  ;;       ("M-v" . nil)
+  ;;       ("M-p" . nil)
+  ;;       ("M-n" . nil))
+  :config
+  (setq-default company-backends '(company-capf company-files))
+  (setq-default company-dabbrev-downcase nil)
+  (setq-default company-tooltip-align-annotations t
+                company-format-margin-function nil)
+
+  (setq company-idle-delay 0.01
+        company-minimum-prefix-length 1)
+  
+  ;; ⭐ Don't let `company-elisp' quickhelp hijack `*Help*' buffer
+  (defvar k-help-buffer-override nil)
+
+  (define-advice company-capf
+      (:around (orig &rest args) k-help-buffer-override)
+    (let ((k-help-buffer-override "*company-documentation*"))
+      (apply orig args)))
+
+  (define-advice help-buffer
+      (:around (orig) k-help-buffer-override)
+    (or (when k-help-buffer-override
+          (get-buffer-create k-help-buffer-override))
+        (funcall orig))))
 
 #+end_src
 **** vertico
@@ -2069,8 +2114,122 @@ vpn may cause this fail!
 ;;               (setq-local prettify-symbols-alist
 ;;                           bison-prettify-symbols-alist)))
 #+end_src
-** clojure
-*** for syntax support
+** lisp
+*** development
+#+begin_src emacs-lisp
+(define-key lisp-mode-shared-map (kbd "C-c C-p") #'eval-print-last-sexp)
+
+(setq-default eval-expression-print-level nil
+              eval-expression-print-length nil)
+#+end_src
+*** cl
+#+begin_src emacs-lisp
+(use-package slime
+  :config
+  (remove-hook 'lisp-mode-hook 'slime-lisp-mode-hook)
+
+  (setq-default inferior-lisp-program "sbcl"
+                slime-lisp-implementations
+                `((sbcl ("sbcl" "--dynamic-space-size" "4096"))
+                  (mega-sbcl ("sbcl" "--dynamic-space-size" "16384" "--control-stack-size" "2"))
+                  (ccl ("ccl64"))))
+
+  ;; Slime mode line
+  (defun slime-mode-line ()
+    (concat (slime-connection-name) " "
+            (propertize (downcase (string-trim (slime-current-package) "#?:\\|\"" "\""))
+                        'face 'k-proper-name)))
+
+  ;; Hacks to make slime-autodoc works better
+  (setq eldoc-idle-delay 0)
+
+  ;; Slime debug window non-prolifiration
+  (set-alist 'display-buffer-alist "\\`*sldb" '((display-buffer-reuse-mode-window))))
+
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package slime-company
+  :config
+  (setq-default slime-company-completion 'fuzzy)
+  (add-to-list 'company-backends 'company-slime)
+
+  (defun company-slime (command &optional arg &rest ignored)
+    "Company mode backend for slime."
+    (let ((candidate (and arg (substring-no-properties arg))))
+      (cl-case command
+        (init
+         (slime-company-active-p))
+        (prefix
+         (when (and ;; OUR CHANGE
+                (or (slime-company-active-p)
+                    (k-slime-command-p current-minibuffer-command))
+                (slime-connected-p)
+                (or slime-company-complete-in-comments-and-strings
+                    (null (slime-company--in-string-or-comment))))
+           (company-grab-symbol)))
+        (candidates
+         (slime-company--fetch-candidates-async candidate))
+        (meta
+         (let ((*slime-company--meta-request* t))
+           (slime-company--arglist candidate)))
+        (annotation
+         (concat (when slime-company-display-arglist
+                   (slime-company--arglist-only candidate))
+                 (when slime-company-display-flags
+                   (concat " " (get-text-property 0 'flags arg)))))
+        (doc-buffer
+         (unless *slime-company--meta-request*
+           (slime-company--doc-buffer candidate)))
+        (quickhelp-string
+         (unless *slime-company--meta-request*
+           (slime-company--quickhelp-string candidate)))
+        (location
+         (slime-company--location candidate))
+        (post-completion
+         (slime-company--post-completion candidate))
+        (sorted
+         (eq slime-company-completion 'fuzzy))))))
+
+(add-to-list 'load-path "~/.emacs.d/elpa/slime-20230222.1526/contrib/")
+(require 'unix-in-slime "~/.quicklisp/local-projects/unix-in-lisp/unix-in-slime")
+
+#+end_src
+(use-package slime)
+(setq inferior-lisp-program (executable-find "sbcl"))
+(define-key slime-mode-map (kbd "C-c C-c") #'slime-eval-buffer)
+
+#+begin_src emacs-lisp
+(use-package sly)
+(setq inferior-lisp-program "sbcl"
+      sly-db-focus-debugger t)
+(define-key sly-mode-map (kbd "C-c b") #'sly-eval-buffer)
+(define-key sly-editing-mode-map (kbd "M-p") #'nil)
+(define-key sly-editing-mode-map (kbd "M-n") #'nil)
+
+;; minor fix on the format string
+(defun common-lisp-glossary-6.0 (term)
+  "Get a URL for a glossary term TERM."
+  (let ((anchor (gethash term common-lisp-hyperspec--glossary-terms)))
+    (if (not anchor)
+	    (message "Unknown glossary term: %s" term)
+      (format "%sBody/26_glo_%s.htm"
+	          common-lisp-hyperspec-root
+	          (let ((char (string-to-char term)))
+		        (if (and (<= ?a char)
+			             (<= char ?z))
+		            (make-string 1 char)
+		          "9"))
+	          anchor))))
+
+;; sly-mrepl
+(add-to-list 'load-path "~/.emacs.d/elpa/sly-20230224.911/contrib/")
+
+
+
+#+end_src
+*** clojure
+**** for syntax support
 #+begin_src emacs-lisp
 (use-package clojure-mode)
 
@@ -2101,7 +2260,7 @@ vpn may cause this fail!
                                       ("\\]" . 'italic)))))
 
 #+end_src
-*** repl connection
+**** repl connection
 #+begin_src emacs-lisp
 (use-package cider)
 
@@ -2113,7 +2272,7 @@ vpn may cause this fail!
 (define-key cider-mode-map (kbd "C-c C-c") #'cider-load-buffer)
 
 #+end_src
-**** format code
+***** format code
 https://github.com/DogLooksGood/zprint.el
 https://github.com/kkinnear/zprint
 #+begin_src emacs-lisp
@@ -2123,7 +2282,7 @@ https://github.com/kkinnear/zprint
 
 
 #+end_src
-*** misc
+**** misc
 #+begin_src emacs-lisp
 ;; (add-to-list 'auto-mode-alist '("lein-env" . enh-ruby-mode))
 ;; its says cider provided this
@@ -2154,45 +2313,23 @@ https://github.com/kkinnear/zprint
 ;;      (define-key cider-mode-map (kbd "C-c u") 'cider-user-ns)))
 
 #+end_src
-** lisp
-*** development
+*** racket
 #+begin_src emacs-lisp
-(define-key lisp-mode-shared-map (kbd "C-c C-p") #'eval-print-last-sexp)
-
-(setq-default eval-expression-print-level nil
-              eval-expression-print-length nil)
+(use-package racket-mode)
+(require 'racket-xp)
+(add-hook 'racket-mode-hook #'racket-xp-mode)
 #+end_src
-*** cl
-(use-package slime)
-(setq inferior-lisp-program (executable-find "sbcl"))
-(define-key slime-mode-map (kbd "C-c C-c") #'slime-eval-buffer)
-
+*** scheme
 #+begin_src emacs-lisp
-(use-package sly)
-(setq inferior-lisp-program "sbcl"
-      sly-db-focus-debugger t)
-(define-key sly-mode-map (kbd "C-c b") #'sly-eval-buffer)
-(define-key sly-editing-mode-map (kbd "M-p") #'nil)
-(define-key sly-editing-mode-map (kbd "M-n") #'nil)
+(use-package scheme)
 
-;; minor fix on the format string
-(defun common-lisp-glossary-6.0 (term)
-  "Get a URL for a glossary term TERM."
-  (let ((anchor (gethash term common-lisp-hyperspec--glossary-terms)))
-    (if (not anchor)
-	    (message "Unknown glossary term: %s" term)
-      (format "%sBody/26_glo_%s.htm"
-	          common-lisp-hyperspec-root
-	          (let ((char (string-to-char term)))
-		        (if (and (<= ?a char)
-			             (<= char ?z))
-		            (make-string 1 char)
-		          "9"))
-	          anchor))))
-
-(require 'unix-in-slime "~/.quicklisp/local-projects/unix-in-lisp/unix-in-slime")
-
-
+(use-package geiser
+  :config
+  (defun geiser-mode-maybe ()
+    (unless (eq major-mode 'scheme-interaction-mode)
+      (geiser-mode)))
+  (add-hook 'scheme-mode-hook 'geiser-mode-maybe)
+  (setq geiser-mode-start-repl-p t))
 
 #+end_src
 ** thought-manage
@@ -2271,12 +2408,6 @@ https://github.com/kkinnear/zprint
 #+begin_src emacs-lisp
 
 #+end_src
-** racket
-#+begin_src emacs-lisp
-(use-package racket-mode)
-(require 'racket-xp)
-(add-hook 'racket-mode-hook #'racket-xp-mode)
-#+end_src
 ** verilog
 #+begin_src emacs-lisp
 ;; (add-to-list 'eglot-server-programs
@@ -2306,4 +2437,5 @@ https://github.com/kkinnear/zprint
 
 ;;(add-hook 'verilog-mode-hook #'flycheck-mode)
 #+end_src
+
 
