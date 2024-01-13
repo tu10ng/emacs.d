@@ -18,6 +18,13 @@ please do not reward me credits if you find this config helpful.
 (setq exec-path-from-shell-shell-name "bash")
 (exec-path-from-shell-initialize)
 
+(defun tu10ng/kill-sexp-save ()
+  (interactive)
+  (save-excursion
+    (kill-sexp)
+    (yank)))
+
+(global-set-key (kbd "M-k") #'tu10ng/kill-sexp-save)
 #+end_src
 
 Test some package
@@ -297,14 +304,8 @@ Thanks to Po Lu!
 #+end_src
 *** treesitter
 #+begin_src emacs-lisp
-;; (require 'treesit)
-;; ;; (setq treesit-extra-load-path '("/usr/bin/"))
-;; (when (treesit-available-p)
-;;   (push '(css-mode . css-ts-mode) major-mode-remap-alist)
-;;   (push '(python-mode . python-ts-mode) major-mode-remap-alist)
-;;   (push '(javascript-mode . js-ts-mode) major-mode-remap-alist)
-;;   (push '(js-json-mode . json-ts-mode) major-mode-remap-alist)
-;;   (push '(typescript-mode . typescript-ts-mode) major-mode-remap-alist))
+(when (treesit-available-p)
+  (message "WARNING: treesit is available"))
 #+end_src
 *** comment-dwim-2
 #+begin_src emacs-lisp
@@ -380,7 +381,7 @@ corfu will not be tangled with move commands
 
 (setq corfu-auto t
       corfu-quit-no-match t
-      corfu-auto-delay 0
+      corfu-auto-delay 0.2
       corfu-auto-prefix 1
       corfu-cycle t
       corfu-excluded-modes '(org-mode slime-repl-mode)
@@ -412,7 +413,7 @@ corfu documentation
 ***** company
 #+begin_src emacs-lisp
 (use-package company
-  :hook (slime-repl-mode . global-company-mode)
+  :hook (slime-repl-mode . company-mode)
   ;; :bind
   ;; (:map company-active-map
   ;;       ("TAB" . company-select-next-or-abort)
@@ -515,6 +516,8 @@ delete directory name in one go
 (use-package eglot)
 (add-to-list
  'completion-category-overrides '((eglot (styles orderless))))
+(global-set-key (kbd "C-c ea") #'eglot-code-actions)
+(global-set-key (kbd "C-c er") #'eglot-rename)
 
 (use-package consult-eglot)
 
@@ -525,7 +528,10 @@ delete directory name in one go
                  'java-mode
                  'haskell-mode
                  'rust-mode
+                 'rust-ts-mode
+                 'python-ts-mode
                  'LaTeX-mode
+                 'typescript-mode
                  ;; 'emacs-lisp-mode
                  ;; 'racket-mode
                  ;; 'lisp-mode
@@ -558,6 +564,9 @@ loading theme is remarkably slow
 (set-face-attribute 'mode-line nil
                     :foreground "green"
                     :background "DarkBlue")
+(set-face-attribute 'default nil
+                    :foreground "white"
+                    :background "#252525")
 (set-face-attribute 'default nil
                     :foreground "green"
                     :background "#252525")
@@ -809,7 +818,14 @@ if the buffer isn't a file, simply restart emacs."
              t)
       (insert-char matching-delimiter))))
 
-(global-set-key "\C-]" #'tu10ng/close-paren) 
+(defun tu10ng/insert-paren-around-last-word ()
+  (interactive)
+  (save-excursion
+    (backward-word)
+    (insert "("))
+  (insert ")"))
+    
+(global-set-key "\C-]" #'tu10ng/insert-paren-around-last-word)
 (global-set-key (kbd "<C-return>") #'(lambda ()
                                        (interactive)
                                        (tu10ng/close-paren)
@@ -1016,8 +1032,8 @@ What a wonderful way to jump to buffer positions.
 (use-package avy)
 (setq avy-all-windows nil
       avy-timeout-seconds 0.3)
-(global-set-key (kbd "C-;") #'avy-goto-char-timer)
-(global-set-key (kbd "C-M-;") 'avy-goto-char-in-line)
+(global-set-key (kbd "C-M-;") #'avy-goto-char-timer)
+(global-set-key (kbd "C-;") 'avy-goto-char-in-line)
 
 
 #+end_src
@@ -1342,7 +1358,8 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
 (global-unset-key "\C-s")
 (use-package consult
   :bind (
-         ("C-x b" . consult-buffer)                
+         ("C-x b" . consult-buffer)
+         ("C-x 4b" . consult-buffer-other-window)
          ("C-s r" . consult-ripgrep)
          ("C-s l" . consult-line)
          ("C-s u" . consult-focus-lines)
@@ -1664,6 +1681,10 @@ git@github.com:tecosaur/screenshot.git
  lox-mode
  graphviz-dot-mode
  groovy-mode
+ yaml-mode
+ typescript-mode
+ cmake-mode
+ lua-mode
  )
 
 ;; (use-package systemd)
@@ -1729,7 +1750,7 @@ Then adding a regex for it to =~/.config/git/config=
 #+begin_src emacs-lisp
 (setq org-directory "~/org"
       org-use-property-inheritance t
-      org-log-done 'time
+      ;; org-log-done 'time
       org-list-allow-alphabetical t
       org-export-in-background t
       org-catch-invisible-edits 'smart
@@ -2062,6 +2083,7 @@ vpn may cause this fail!
 (use-package python-black)
 ;; wierd mode map
 (define-key python-base-mode-map (kbd "C-M-\\") #'python-black-buffer)
+(define-key python-ts-mode-map (kbd "C-M-\\") #'python-black-buffer)
 
 ;; (define-key python-mode-map [remap indent-buffer] #'python-black-buffer)
 
@@ -2072,6 +2094,8 @@ vpn may cause this fail!
 #+end_src
 ** c mode
 #+begin_src emacs-lisp
+(setq c-default-style "cc-mode"
+      c-basic-offset 4)
 (add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
 #+end_src
 ** nasm mode
@@ -2085,6 +2109,8 @@ vpn may cause this fail!
 #+begin_src emacs-lisp
 (use-package rust-mode)
 (define-key rust-mode-map (kbd "C-M-\\") #'rust-format-buffer)
+(define-key rust-ts-mode-map (kbd "C-M-\\") #'rust-format-buffer)
+
 #+end_src
 *** lalrpop
 #+begin_src emacs-lisp
