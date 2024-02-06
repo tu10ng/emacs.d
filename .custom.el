@@ -4,14 +4,36 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(connection-local-criteria-alist
-   '(((:application tramp :protocol "flatpak")
-      tramp-container-connection-local-default-flatpak-profile)
+   '(((:application tramp :protocol "kubernetes")
+      tramp-kubernetes-connection-local-default-profile)
+     ((:application tramp :protocol "flatpak")
+      tramp-container-connection-local-default-flatpak-profile
+      tramp-flatpak-connection-local-default-profile)
      ((:application tramp)
       tramp-connection-local-default-system-profile
       tramp-connection-local-default-shell-profile)
      ((:application eshell) eshell-connection-default-profile)))
  '(connection-local-profile-alist
-   '((tramp-container-connection-local-default-flatpak-profile
+   '((tramp-flatpak-connection-local-default-profile
+      (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin"
+                         "/usr/bin" "/sbin" "/usr/sbin"
+                         "/usr/local/bin" "/usr/local/sbin"
+                         "/local/bin" "/local/freeware/bin"
+                         "/local/gnu/bin" "/usr/freeware/bin"
+                         "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin"
+                         "/opt/sbin" "/opt/local/bin"))
+     (tramp-kubernetes-connection-local-default-profile
+      (tramp-config-check . tramp-kubernetes--current-context-data)
+      (tramp-extra-expand-args 97
+                               (tramp-kubernetes--container
+                                (car tramp-current-connection))
+                               104
+                               (tramp-kubernetes--pod
+                                (car tramp-current-connection))
+                               120
+                               (tramp-kubernetes--context-namespace
+                                (car tramp-current-connection))))
+     (tramp-container-connection-local-default-flatpak-profile
       (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin"
                          "/usr/bin" "/sbin" "/usr/sbin"
                          "/usr/local/bin" "/usr/local/sbin"
@@ -90,6 +112,36 @@
       (path-separator . ":") (null-device . "/dev/null"))
      (eshell-connection-default-profile (eshell-path-env-list))))
  '(magit-todos-insert-after '(bottom) nil nil "Changed by setter of obsolete option `magit-todos-insert-at'")
+ '(org-speed-commands
+   '(("Outline Navigation")
+     ("n" org-speed-move-safe 'org-next-visible-heading)
+     ("p" org-speed-move-safe 'org-previous-visible-heading)
+     ("f" org-speed-move-safe 'org-forward-heading-same-level)
+     ("b" org-speed-move-safe 'org-backward-heading-same-level)
+     ("F" . org-next-block) ("B" . org-previous-block)
+     ("u" org-speed-move-safe 'outline-up-heading)
+     ("g" org-refile '(4)) ("Outline Visibility") ("c" . org-cycle)
+     ("C" . org-shifttab) (" " . org-display-outline-path)
+     ("s" . org-toggle-narrow-to-subtree) ("=" . org-columns)
+     ("Outline Structure Editing") ("k" . org-metaup)
+     ("j" . org-metadown) ("l" . org-metaright) ("h" . org-metaleft)
+     ("R" . org-shiftmetaright) ("L" . org-shiftmetaleft)
+     ("i" progn (forward-char 1)
+      (call-interactively 'org-insert-heading-respect-content))
+     ("^" . org-sort) ("w" . org-refile)
+     ("a" . org-archive-subtree-default-with-confirmation)
+     ("@" . org-mark-subtree) ("#" . org-toggle-comment)
+     ("Clock Commands") ("I" . org-clock-in) ("O" . org-clock-out)
+     ("Meta Data Editing") ("t" . org-todo) ("," org-priority)
+     ("0" org-priority 32) ("1" org-priority 65) ("2" org-priority 66)
+     ("3" org-priority 67) (":" . org-set-tags-command)
+     ("e" . org-set-effort) ("E" . org-inc-effort)
+     ("W" lambda (m) (interactive "sMinutes before warning: ")
+      (org-entry-put (point) "APPT_WARNTIME" m))
+     ("Agenda Views etc") ("v" . org-agenda) ("/" . org-sparse-tree)
+     ("Misc") ("o" . org-open-at-point) ("?" . org-speed-command-help)
+     ("<" org-agenda-set-restriction-lock 'subtree)
+     (">" org-agenda-remove-restriction-lock)))
  '(package-selected-packages
    '(lua-mode cmake-mode typescript-mode yaml-mode slime-company company
               geiser goto-last-change comment-dwim-2 dtrt-indent

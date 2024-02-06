@@ -11,6 +11,7 @@
       use-package-always-demand t)
 
 ;; (setq debug-on-error t)
+;; (setq debug-on-error nil)
 ;; Adjust garbage collection thresholds during startup, and thereafter
 (let ((init-gc-cons-threshold most-positive-fixnum))
   (setq gc-cons-threshold init-gc-cons-threshold)
