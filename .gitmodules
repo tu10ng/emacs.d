@@ -1,9 +1,6 @@
 [submodule "site-lisp/page-break-lines"]
 	path = site-lisp/page-break-lines
 	url = git@github.com:purcell/page-break-lines.git
-[submodule "site-lisp/auto-save"]
-	path = site-lisp/auto-save
-	url = git@github.com:manateelazycat/auto-save.git
 [submodule "site-lisp/org-modern-indent"]
 	path = site-lisp/org-modern-indent
 	url = git@github.com:jdtsmith/org-modern-indent.git
@@ -19,3 +16,6 @@
 [submodule "site-lisp/rgb-cursor"]
 	path = site-lisp/rgb-cursor
 	url = git@github.com:tu10ng/rgb-cursor.git
+[submodule "site-lisp/auto-save"]
+	path = site-lisp/auto-save
+	url = git@github.com:manateelazycat/auto-save.git
