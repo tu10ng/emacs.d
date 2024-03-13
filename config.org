@@ -31,7 +31,7 @@ please do not reward me credits if you find this config helpful.
 Test some package & modes
 #+begin_src emacs-lisp
 ;; no use?
-(kill-ring-deindent-mode -1)
+;; (kill-ring-deindent-mode -1)
 
 #+end_src
 ** better defaults
