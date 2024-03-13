@@ -14,9 +14,12 @@ please do not reward me credits if you find this config helpful.
 ;; need to becalled before loading smerge
 (setq smerge-command-prefix "\C-cv")
 
-(use-package exec-path-from-shell)
-(setq exec-path-from-shell-shell-name "bash")
-(exec-path-from-shell-initialize)
+(cond
+ (IS-WINDOWS ())
+ (IS-LINUX
+  (use-package exec-path-from-shell)
+  (setq exec-path-from-shell-shell-name "bash")
+  (exec-path-from-shell-initialize)))
 
 (defun tu10ng/kill-sexp-save ()
   (interactive)
@@ -38,6 +41,10 @@ Test some package & modes
 *** simple settings
 [[https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org#use-better-defaults][angrybacon/dotemacs]]
 #+begin_src emacs-lisp
+(defconst IS-MAC      (eq system-type 'darwin))
+(defconst IS-LINUX    (memq system-type '(gnu gnu/linux gnu/kfreebsd berkeley-unix)))
+(defconst IS-WINDOWS  (memq system-type '(cygwin windows-nt ms-dos)))
+
 (setq-default
  delete-by-moving-to-trash t                      ; Delete files to trash
  window-combination-resize t                      ; take new window space from all other windows (not just current)
@@ -112,7 +119,9 @@ Test some package & modes
 *** frame sizing
 #+begin_src emacs-lisp
 (toggle-frame-maximized)
-(toggle-frame-fullscreen)
+(cond
+ (IS-WINDOWS ())
+ (IS-LINUX (toggle-frame-fullscreen)))
 #+end_src
 *** auto-customizations
 change though customisation interface will not add to =init.el=.
@@ -1523,7 +1532,7 @@ TODO: can eros's overlay stay if its not covering the cursor?
 #+end_src
 *** dictionary
 #+begin_src emacs-lisp
-(require 'popup)
+(use-package popup)
 
 ;; (use-package youdao-dictionary
 ;;   :bind (("M-s" . youdao-dictionary-search-at-point+)))
@@ -1547,17 +1556,17 @@ TODO: can eros's overlay stay if its not covering the cursor?
 ;;                                   (run-with-timer
 ;;                                    0.1 nil
 ;;                                    #'doc-view-fit-page-to-window)))
-(setq doc-view-continuous t)
+;; (setq doc-view-continuous t)
 
-(use-package pdf-tools
-  :mode ("\\.pdf\\'" . pdf-view-mode)
-  :config
-  (pdf-tools-install)
+;; (use-package pdf-tools
+;;   :mode ("\\.pdf\\'" . pdf-view-mode)
+;;   :config
+;;   (pdf-tools-install)
 
-  (use-package pdf-continuous-scroll-mode
-    :disabled                           ; This mode barely does anything useful
-    :quelpa (pdf-continuous-scroll-mode :fetcher github :repo "dalanicolai/pdf-continuous-scroll-mode.el")
-    :hook (pdf-view-mode . pdf-continuous-scroll-mode)))
+;;   (use-package pdf-continuous-scroll-mode
+;;     :disabled                           ; This mode barely does anything useful
+;;     :quelpa (pdf-continuous-scroll-mode :fetcher github :repo "dalanicolai/pdf-continuous-scroll-mode.el")
+;;     :hook (pdf-view-mode . pdf-continuous-scroll-mode)))
 
 #+end_src
 ** visuals
@@ -1656,9 +1665,9 @@ amuse oneself. Introducing: typewriter sounds!
 #+end_src
 *** wakatime
 #+begin_src emacs-lisp
-(use-package wakatime-mode)
-(setq wakatime-disable-on-error t)
-(global-wakatime-mode 1)
+;; (use-package wakatime-mode)
+;; (setq wakatime-disable-on-error t)
+;; (global-wakatime-mode 1)
 #+end_src
 *** rgb cursor
 #+begin_src emacs-lisp
@@ -2189,7 +2198,8 @@ vpn may cause this fail!
   (setq eldoc-idle-delay 0)
 
   ;; Slime debug window non-prolifiration
-  (set-alist 'display-buffer-alist "\\`*sldb" '((display-buffer-reuse-mode-window))))
+  ;; (set-alist 'display-buffer-alist "\\`*sldb" '((display-buffer-reuse-mode-window)))
+  )
 
 #+end_src
 
@@ -2236,8 +2246,8 @@ vpn may cause this fail!
         (sorted
          (eq slime-company-completion 'fuzzy))))))
 
-(add-to-list 'load-path "~/.emacs.d/elpa/slime-20230222.1526/contrib/")
-(require 'unix-in-slime "~/.quicklisp/local-projects/unix-in-lisp/unix-in-slime")
+;; (add-to-list 'load-path "~/.emacs.d/elpa/slime-20230222.1526/contrib/")
+;; (require 'unix-in-slime "~/.quicklisp/local-projects/unix-in-lisp/unix-in-slime")
 
 #+end_src
 (use-package slime)
