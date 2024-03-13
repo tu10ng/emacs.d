@@ -107,6 +107,14 @@ Test some package & modes
 (delete-selection-mode 1)
 (set-default-coding-systems 'utf-8)
 #+end_src
+*** bidi
+#+begin_src emacs-lisp
+(setq-default bidi-display-reordering nil)
+(setq bidi-inhibit-bpa t
+      long-line-threshold 1000
+      large-hscroll-threshold 1000
+      syntax-wholeline-max 1000)
+#+end_src
 *** rm scratch buffer
 #+begin_src emacs-lisp
 (setq initial-scratch-message "")
@@ -114,6 +122,10 @@ Test some package & modes
   (if (get-buffer "*scratch*")
       (kill-buffer "*scratch*")))
 (add-hook 'after-change-major-mode-hook 'remove-scratch-buffer)
+#+end_src
+*** sound
+#+begin_src emacs-lisp
+(set-message-beep 'silent)
 #+end_src
 *** frame sizing
 #+begin_src emacs-lisp
