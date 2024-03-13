@@ -10,12 +10,11 @@
 (setq use-package-always-ensure t
       use-package-always-demand t)
 
-;; (setq debug-on-error t)
-
 (defun package--print-email-button (a))
-    
+
 ;; (setq debug-on-error nil)
 ;; (setq debug-on-error t)
+
 ;; Adjust garbage collection thresholds during startup, and thereafter
 (let ((init-gc-cons-threshold most-positive-fixnum))
   (setq gc-cons-threshold init-gc-cons-threshold)

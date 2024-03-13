@@ -14,13 +14,6 @@ please do not reward me credits if you find this config helpful.
 ;; need to becalled before loading smerge
 (setq smerge-command-prefix "\C-cv")
 
-(cond
- (IS-WINDOWS ())
- (IS-LINUX
-  (use-package exec-path-from-shell)
-  (setq exec-path-from-shell-shell-name "bash")
-  (exec-path-from-shell-initialize)))
-
 (defun tu10ng/kill-sexp-save ()
   (interactive)
   (save-excursion
@@ -44,6 +37,12 @@ Test some package & modes
 (defconst IS-MAC      (eq system-type 'darwin))
 (defconst IS-LINUX    (memq system-type '(gnu gnu/linux gnu/kfreebsd berkeley-unix)))
 (defconst IS-WINDOWS  (memq system-type '(cygwin windows-nt ms-dos)))
+(cond
+ (IS-WINDOWS ())
+ (IS-LINUX
+  (use-package exec-path-from-shell)
+  (setq exec-path-from-shell-shell-name "bash")
+  (exec-path-from-shell-initialize)))
 
 (setq-default
  delete-by-moving-to-trash t                      ; Delete files to trash
@@ -106,7 +105,7 @@ Test some package & modes
 (set-language-environment "UTF-8")
 (prefer-coding-system 'utf-8)
 (delete-selection-mode 1)
-
+(set-default-coding-systems 'utf-8)
 #+end_src
 *** rm scratch buffer
 #+begin_src emacs-lisp
@@ -837,7 +836,7 @@ if the buffer isn't a file, simply restart emacs."
     (backward-word)
     (insert "("))
   (insert ")"))
-    
+
 (global-set-key "\C-]" #'tu10ng/insert-paren-around-last-word)
 (global-set-key (kbd "<C-return>") #'(lambda ()
                                        (interactive)
@@ -1450,9 +1449,12 @@ TODO: can eros's overlay stay if its not covering the cursor?
 #+end_src
 **** magit todos
 #+begin_src emacs-lisp
-(use-package magit-todos)
-(setq magit-todos-auto-group-items 3)
-(magit-todos-mode)
+(cond
+ (IS-WINDOWS ())
+ (IS-LINUX
+  (use-package magit-todos)
+  (setq magit-todos-auto-group-items 3)
+  (magit-todos-mode)))
 
 
 #+end_src
