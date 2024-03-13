@@ -143,22 +143,22 @@
      ("<" org-agenda-set-restriction-lock 'subtree)
      (">" org-agenda-remove-restriction-lock)))
  '(package-selected-packages
-   '(lua-mode cmake-mode typescript-mode yaml-mode slime-company company
-              geiser goto-last-change comment-dwim-2 dtrt-indent
-              volatile-highlights apel flycheck devdocs groovy-mode
-              lsp-pyright nasm-mode racket-mode pdf-tools iscroll
-              graphviz-dot-mode cdlatex auctex lox-mode posframe
-              electric-operator try tuareg ebnf-mode ebnf
-              clojure-mode-extra-font-locking bison-mode
-              exec-path-from-shell smart-hungry-delete benchmark-init
-              ox-reveal helpful move-text consult-dir
-              youdao-dictionary doom-modeline ahk-mode
-              vertico-directory fish-mode fish python-black py-yapf
-              yapfify all-the-icons org-super-agenda valign org-appear
-              shackle wakatime-mode restart-emacs pyim-basedict
-              prettify-math prettify-greek rainbow-delimiters gcmh
-              selectric-mode selectic-mode info-colors magit-delta
-              which-key avy module))
+   '(ahk-mode all-the-icons apel auctex avy benchmark-init bison-mode
+              cdlatex clojure-mode-extra-font-locking cmake-mode
+              comment-dwim-2 company consult-dir devdocs doom-modeline
+              dtrt-indent ebnf ebnf-mode electric-operator
+              exec-path-from-shell fish fish-mode flycheck gcmh geiser
+              goto-last-change graphviz-dot-mode groovy-mode helpful
+              info-colors iscroll lox-mode lsp-pyright lua-mode
+              magit-delta module move-text nasm-mode org-appear
+              org-super-agenda ox-reveal pdf-tools posframe
+              prettify-greek prettify-math py-yapf pyim-basedict
+              python-black racket-mode rainbow-delimiters
+              restart-emacs selectic-mode selectric-mode shackle
+              slime-company smart-hungry-delete symbol-overlay try
+              tuareg typescript-mode valign vertico-directory
+              volatile-highlights wakatime-mode which-key yaml-mode
+              yapfify youdao-dictionary))
  '(safe-local-variable-values '((toc-org-max-depth . 3) (checkdoc-minor-mode . t)))
  '(wakatime-api-key "c2a0b2a6-ab7d-4af3-bfbc-0924271ecbb6")
  '(wakatime-cli-path "/usr/bin/wakatime-cli"))
@@ -168,4 +168,5 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(show-paren-match ((t (:background "#1B2229" :foreground "#ffffff" :underline t :weight ultra-bold))))
- '(show-paren-mismatch ((t (:background "purple")))))
+ '(show-paren-mismatch ((t (:background "purple"))))
+ '(symbol-overlay-default-face ((t (:inherit nil :underline "white")))))

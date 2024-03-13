@@ -554,7 +554,7 @@ delete directory name in one go
 *** visual settings
 **** font
 #+begin_src emacs-lisp
-(set-face-attribute 'default nil :font "Source Code Pro:pixelsize=23")
+(set-face-attribute 'default nil :font "Source Code Pro:pixelsize=20")
 
 #+end_src
 **** theme
@@ -1016,6 +1016,13 @@ set aliases for the terminal-forced variants.
 alias m='e --eval "(progn (magit-status) (delete-other-windows))"'
 alias mt="m -t"
 alias et="e -t"
+#+end_src
+*** symbol overlay 
+#+begin_src emacs-lisp
+(use-package symbol-overlay)
+
+(setq symbol-overlay-idle-time 0.01)
+(add-hook 'prog-mode-hook #'symbol-overlay-mode)
 #+end_src
 * packages
 ** INTRUCTIONS
@@ -1518,8 +1525,8 @@ TODO: can eros's overlay stay if its not covering the cursor?
 #+begin_src emacs-lisp
 (require 'popup)
 
-(use-package youdao-dictionary
-  :bind (("M-s" . youdao-dictionary-search-at-point+)))
+;; (use-package youdao-dictionary
+;;   :bind (("M-s" . youdao-dictionary-search-at-point+)))
 
 #+end_src
 *** tldr
@@ -2117,6 +2124,12 @@ vpn may cause this fail!
 (define-key rust-mode-map (kbd "C-M-\\") #'rust-format-buffer)
 ;; (define-key rust-ts-mode-map (kbd "C-M-\\") #'rust-format-buffer)
 
+(defun rust-electric-semi&comma ()
+  (interactive)
+  (insert ";")
+  (tu10ng/open-below))
+
+(define-key rust-mode-map (kbd ";") #'rust-electric-semi&comma)
 #+end_src
 *** lalrpop
 #+begin_src emacs-lisp
