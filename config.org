@@ -119,7 +119,9 @@ Test some package & modes
 #+end_src
 *** sound
 #+begin_src emacs-lisp
-(set-message-beep 'silent)
+(cond
+ (IS-WINDOWS
+  (set-message-beep 'silent)))
 #+end_src
 *** frame sizing
 #+begin_src emacs-lisp
@@ -555,7 +557,7 @@ delete directory name in one go
                  ;; 'racket-mode
                  ;; 'lisp-mode
                  ;; 'makefile-mode
-                 ;; 'c-mode
+                 'c-mode
                  ;; 'asm-mode
                  ;; 'nasm-mode
                  ;; 'verilog-mode
@@ -1693,6 +1695,26 @@ amuse oneself. Introducing: typewriter sounds!
 speed-type
 #+begin_src emacs-lisp
 (use-package speed-type)
+
+(setq speed-type-min-chars 2000)
+
+(defun tu10ng/speed-type-buffer (full)
+  (interactive "P")
+  (if (or full
+          (< (buffer-size) speed-type-min-chars))
+      (speed-type-region (point-min) (point-max))
+    (let* ((buf (current-buffer))
+           (start (save-excursion
+                    (goto-char (random (- (point-max) speed-type-min-chars)))
+                    (beginning-of-line)
+                    (point)))
+           (end (save-excursion
+                  (goto-char (+ start speed-type-min-chars))
+                  (beginning-of-line)
+                  (point))))
+      
+      (speed-type-region start end))))
+
 
 #+end_src
 *** try
