@@ -194,7 +194,7 @@ change though customisation interface will not add to =init.el=.
      ("*Shell Command Output*"    :select nil :align bellow :size 0.4)
      ("*Async Shell Command*"     :select nil :align bellow :size 0.4)
      ("*sly-description*"     :select t)
-
+     ("*eshell*" :select t :align right :popup t :same nil :size 0.3)
      ("*Org-Babel Error Output*"  :select nil :align bellow :size 0.3)
      ("*package update results*"  :select nil :align bellow :size 10)
      ("*Process List*"            :select t   :align bellow :size 0.3)
@@ -1527,8 +1527,12 @@ TODO: can eros's overlay stay if its not covering the cursor?
 (setq default-input-method "pyim")
 ;; slow down pyim init speed.
 (add-to-list 'load-path "~/.emacs.d/site-lisp/pyim-tsinghua-dict")
-(require 'pyim-tsinghua-dict)
-(pyim-tsinghua-dict-enable)
+
+(cond
+ (IS-WINDOWS ())
+ (IS-LINUX
+  (require 'pyim-tsinghua-dict)
+  (pyim-tsinghua-dict-enable)))
 (require 'pyim-cstring-utils)
 (defun my-orderless-regexp (orig-func component)
   (let ((result (funcall orig-func component)))
@@ -1801,6 +1805,7 @@ Then adding a regex for it to =~/.config/git/config=
 
 (define-key org-mode-map [M-down] #'tu10ng/org-metadown)
 (define-key org-mode-map [M-up] #'tu10ng/org-metaup)
+(define-key org-mode-map (kbd "C-M-k") #'org-cut-subtree)
 #+end_src
 *** actions
 **** defaults
@@ -2152,7 +2157,114 @@ vpn may cause this fail!
 #+end_src
 ** c mode
 #+begin_src emacs-lisp
-(setq c-default-style "cc-mode"
+(defun tu10ng/substatement-open-insert-space-before (_syntax pos)
+  "like this: if (...)_{"
+  (unless (char-equal (char-after (1- pos)) ?\s)
+    (insert " "))
+  '(after))
+
+(c-add-style "hw"
+             '((c-basic-offset . 4)     ; Guessed value
+               (c-cleanup-list . (brace-else-brace
+                                  brace-elseif-brace
+                                  brace-catch-brace
+                                  empty-defun-braces
+                                  one-liner-defun
+                                  defun-close-semi
+                                  scope-operator
+                                  compact-empty-funcall))
+               (c-hanging-braces-alist . ((defun-open before after)
+                                          (class-open after)
+                                          (class-close before)
+                                          (block-close . c-snug-do-while)
+                                          (statement-cont)
+                                          (substatement-open . tu10ng/substatement-open-insert-space-before)
+                                          (brace-list-open)
+                                          (brace-list-close)
+                                          (brace-entry-open)
+                                          (extern-lang-open after)
+                                          (namespace-open after)
+                                          (module-open after)
+                                          (composition-open after)
+                                          (inexpr-class-open after)
+                                          (inexpr-class-close before)
+                                          (arglist-cont-nonempty)))
+               (c-offsets-alist
+                (block-close . 0)       ; Guessed value
+                (class-close . 0)       ; Guessed value
+                (defun-block-intro . +) ; Guessed value
+                (defun-close . 0)       ; Guessed value
+                (defun-open . 0)        ; Guessed value
+                (inclass . +)           ; Guessed value
+                (statement . 0)             ; Guessed value
+                (statement-block-intro . +) ; Guessed value
+                (topmost-intro . 0)         ; Guessed value
+                (access-label . -)
+                (annotation-top-cont . 0)
+                (annotation-var-cont . +)
+                (arglist-close . c-lineup-close-paren)
+                (arglist-cont c-lineup-gcc-asm-reg 0)
+                (arglist-cont-nonempty . c-lineup-arglist)
+                (arglist-intro . +)
+                (block-open . 0)
+                (brace-entry-open . 0)
+                (brace-list-close . 0)
+                (brace-list-entry . 0)
+                (brace-list-intro . +)
+                (brace-list-open . 0)
+                (c . c-lineup-C-comments)
+                (case-label . +)
+                (catch-clause . 0)
+                (class-open . 0)
+                (comment-intro . c-lineup-comment)
+                (composition-close . 0)
+                (composition-open . 0)
+                (cpp-define-intro c-lineup-cpp-define +)
+                (cpp-macro . -1000)
+                (cpp-macro-cont . +)
+                (do-while-closure . 0)
+                (else-clause . 0)
+                (extern-lang-close . 0)
+                (extern-lang-open . 0)
+                (friend . 0)
+                (func-decl-cont . +)
+                (incomposition . +)
+                (inexpr-class . +)
+                (inexpr-statement . +)
+                (inextern-lang . +)
+                (inher-cont . c-lineup-multi-inher)
+                (inher-intro . +)
+                (inlambda . 0)
+                (inline-close . 0)
+                (inline-open . +)
+                (inmodule . +)
+                (innamespace . +)
+                (knr-argdecl . 0)
+                (knr-argdecl-intro . +)
+                (label . 2)
+                (lambda-intro-cont . +)
+                (member-init-cont . c-lineup-multi-inher)
+                (member-init-intro . +)
+                (module-close . 0)
+                (module-open . 0)
+                (namespace-close . 0)
+                (namespace-open . 0)
+                (objc-method-args-cont . c-lineup-ObjC-method-args)
+                (objc-method-call-cont c-lineup-ObjC-method-call-colons c-lineup-ObjC-method-call +)
+                (objc-method-intro .
+                                   [0])
+                (statement-case-intro . +)
+                (statement-case-open . 0)
+                (statement-cont . +)
+                (stream-op . c-lineup-streamop)
+                (string . -1000)
+                (substatement . +)
+                (substatement-label . 2)
+                (substatement-open . +)
+                (template-args-cont c-lineup-template-args +)
+                (topmost-intro-cont . c-lineup-topmost-intro-cont))))
+
+(setq c-default-style "hw"
       c-basic-offset 4)
 (add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
 #+end_src
