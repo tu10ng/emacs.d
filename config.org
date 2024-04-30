@@ -85,6 +85,7 @@ Test some package & modes
       read-char-choice-use-read-key t
       next-line-add-newlines t
       dabbrev-case-replace nil
+      max-mini-window-height 1
       )
 
 (put 'upcase-region    'disabled nil)
@@ -352,7 +353,7 @@ Thanks to Po Lu!
 
 #+end_src
 ** emacs configuration
-*** interface
+*** completion interface
 **** orderless
 #+begin_src emacs-lisp
 (use-package orderless)
@@ -369,79 +370,79 @@ Thanks to Po Lu!
 
 #+end_src
 **** capf
-***** corfu
 only use TAB and S-TAB to select candidate and auto insert
 corfu will not be tangled with move commands
+
+***** corfu
 #+begin_src emacs-lisp
 ;; TODO
 (setq tab-always-indent 'complete)
 
-(use-package corfu
-  :bind
-  (:map corfu-map
-        ([remap move-beginning-of-line] . nil)
-        ([remap move-end-of-line] . nil)
-        ([remap beginning-of-buffer] . nil)
-        ([remap end-of-buffer] . nil)
-        ([remap scroll-down-command] . nil)
-        ([remap scroll-up-command] . nil)
-        ([remap next-line] . nil)
-        ([remap previous-line] . nil)
-        ([remap newline] . nil)
-        ("C-a" . nil)
-        ("C-e" . nil)
-        ("RET" . nil)
-        ([ret] . nil)
-        ("M-p" . nil)
-        ("M-n" . nil)
-        ("TAB" . corfu-next)
-        ([tab] . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous)))
+;; (use-package corfu
+;;   :bind
+;;   (:map corfu-map
+;;         ([remap move-beginning-of-line] . nil)
+;;         ([remap move-end-of-line] . nil)
+;;         ([remap beginning-of-buffer] . nil)
+;;         ([remap end-of-buffer] . nil)
+;;         ([remap scroll-down-command] . nil)
+;;         ([remap scroll-up-command] . nil)
+;;         ([remap next-line] . nil)
+;;         ([remap previous-line] . nil)
+;;         ([remap newline] . nil)
+;;         ("C-a" . nil)
+;;         ("C-e" . nil)
+;;         ("RET" . nil)
+;;         ([ret] . nil)
+;;         ("M-p" . nil)
+;;         ("M-n" . nil)
+;;         ("TAB" . corfu-next)
+;;         ([tab] . corfu-next)
+;;         ("S-TAB" . corfu-previous)
+;;         ([backtab] . corfu-previous)))
 
-(setq corfu-auto t
-      corfu-quit-no-match t
-      corfu-auto-delay 0.2
-      corfu-auto-prefix 1
-      corfu-cycle t
-      corfu-excluded-modes '(org-mode slime-repl-mode)
-      corfu-preselect 'prompt
-      ;; https://emacs-china.org/t/corfu-tab-and-go-eglot-snippet/24473
-      ;; still have problem when writing rust
-      ;; corfu-on-exact-match nil
-      ;; eglot-stay-out-of '(yasnippet)
-      )
+;; (setq corfu-auto t
+;;       corfu-quit-no-match t
+;;       corfu-auto-delay 0.2
+;;       corfu-auto-prefix 1
+;;       corfu-cycle t
+;;       corfu-excluded-modes '(org-mode slime-repl-mode)
+;;       corfu-preselect 'prompt
+;;       ;; https://emacs-china.org/t/corfu-tab-and-go-eglot-snippet/24473
+;;       ;; still have problem when writing rust
+;;       ;; corfu-on-exact-match nil
+;;       ;; eglot-stay-out-of '(yasnippet)
+;;       )
 
-(global-corfu-mode 1)
+;; (global-corfu-mode 1)
 
-#+end_src
-corfu documentation
-#+begin_src emacs-lisp
-(setq corfu-popupinfo-delay 0
-      corfu-popupinfo-max-height 30)
+;; (setq corfu-popupinfo-delay 0
+;;       corfu-popupinfo-max-height 30)
 
-(corfu-popupinfo-mode 1)
+;; (corfu-popupinfo-mode 1)
 #+end_src
 ***** cape
 #+begin_src emacs-lisp
-(use-package cape
-  :commands (cape-file)
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-file))
+;; (use-package cape
+;;   :commands (cape-file)
+;;   :init
+;;   (add-to-list 'completion-at-point-functions #'cape-file))
 
-(defun ispell-completion-at-point ())
+;; (defun ispell-completion-at-point ())
 #+end_src
 ***** company
 #+begin_src emacs-lisp
 (use-package company
   :hook (slime-repl-mode . company-mode)
-  ;; :bind
+  :bind
+  (:map global-map
+        ("C-M-i" . company-complete))
   ;; (:map company-active-map
   ;;       ("TAB" . company-select-next-or-abort)
   ;;       ("<backtab>" . company-select-previous-or-abort)
   ;;       ("<tab>" . nil)
-  ;;       ("RET" . nil)
-  ;;       ("<return>" . nil)
+  ;;       ;; ("RET" . nil)
+  ;;       ;; ("<return>" . nil)
   ;;       ("C-p" . nil)
   ;;       ("C-n" . nil)
   ;;       ("C-s" . nil)
@@ -453,14 +454,44 @@ corfu documentation
   ;;       ("M-p" . nil)
   ;;       ("M-n" . nil))
   :config
-  (setq-default company-backends '(company-capf company-files))
+  ;; (setq-default company-backends '(company-capf company-files))
   (setq-default company-dabbrev-downcase nil)
   (setq-default company-tooltip-align-annotations t
                 company-format-margin-function nil)
+  (setq-default company-frontends
+                '(company-pseudo-tooltip-frontend
+                  company-echo-metadata-frontend))
+
+  (setq company-backends
+        '(;; company-bbdb
+          ;; company-semantic
+          ;; company-cmake
+          ;; company-yasnippet
+          company-files
+          company-capf
+          company-etags
+          (company-dabbrev-code company-gtags company-etags company-keywords)
+          ;; company-clang
+          company-dabbrev
+          ))
 
   (setq company-idle-delay 0.01
-        company-minimum-prefix-length 1)
-  
+        company-minimum-prefix-length 1
+        company-selection-wrap-around t
+        company-tooltip-limit 10
+        company-tooltip-flip-when-above t
+        company-tooltip-align-annotations t
+        company-dabbrev-other-buffers nil
+        company-dabbrev-ignore-case t
+        company-files-exclusions '(".git/" 
+                                   ".gitignore"
+                                   ".gitmodules")
+        company-transformers '(delete-consecutive-dups
+                               company-sort-by-occurrence
+                               company-sort-prefer-same-case-prefix)
+        company-files-chop-trailing-slash nil
+        company-format-margin-function #'company-text-icons-margin)
+
   ;; ⭐ Don't let `company-elisp' quickhelp hijack `*Help*' buffer
   (defvar k-help-buffer-override nil)
 
@@ -475,6 +506,12 @@ corfu documentation
           (get-buffer-create k-help-buffer-override))
         (funcall orig))))
 
+(global-company-mode)
+(add-hook 'company-mode-hook 'company-tng-mode)
+
+(use-package company-quickhelp)
+(company-quickhelp-mode 1)
+(setq company-quickhelp-delay 0.7)
 #+end_src
 **** vertico
 ***** vertico common
@@ -535,10 +572,12 @@ delete directory name in one go
 **** lsp
 #+begin_src emacs-lisp
 (use-package eglot)
+(setq eglot-stay-out-of '(company)) ;; dont change company capf
 (add-to-list
  'completion-category-overrides '((eglot (styles orderless))))
 (global-set-key (kbd "C-c ea") #'eglot-code-actions)
 (global-set-key (kbd "C-c er") #'eglot-rename)
+(global-set-key (kbd "C-c ee") #'eglot)
 
 (use-package consult-eglot)
 
@@ -814,7 +853,9 @@ comment out, uses v2raya's transparent proxy
 #+end_src
 *** eww, browse url, browser
 #+begin_src emacs-lisp
-(setq browse-url-browser-function #'eww-browse-url)
+(cond 
+ (IS-WINDOWS (setq browse-url-browser-function #'browse-url-default-browser))
+ (IS-LINUX (setq browse-url-browser-function #'eww-browse-url)))
 
 
 #+end_src
@@ -1414,6 +1455,14 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
   (consult-async-input-throttle 0.2)
   (consult-async-input-debounce 0.1)
   )
+
+;; TODO: dwim, save name for 1min, or use last name as default; and save jump point, next invoke should start after last invoke's point, to avoid jumping to same word if user have made modifications.
+(defun tu10ng/search-and-jump-next (name)
+  (interactive "sname: ")
+  (let ((point (re-search-forward name nil t)))
+    (goto-char point)))
+(global-set-key (kbd "C-s n") #'tu10ng/search-and-jump-next)
+
 #+end_src
 consult-dir
 remap M-; in vertico-map to find and insert directory into minibuffer prompt
@@ -1780,7 +1829,8 @@ Then adding a regex for it to =~/.config/git/config=
       org-use-fast-todo-selection 'expert
       org-log-into-drawer t
       org-startup-folded t
-      org-hide-emphasis-markers t
+      org-emphasis-alist nil
+      org-hide-emphasis-markers nil
       org-imenu-depth 5
       org-use-speed-commands t)
 
@@ -2352,47 +2402,47 @@ vpn may cause this fail!
 #+end_src
 
 #+begin_src emacs-lisp
-(use-package slime-company
-  :config
-  (setq-default slime-company-completion 'fuzzy)
-  (add-to-list 'company-backends 'company-slime)
+;; (use-package slime-company
+;;   :config
+;;   (setq-default slime-company-completion 'fuzzy)
+;;   (add-to-list 'company-backends 'company-slime)
 
-  (defun company-slime (command &optional arg &rest ignored)
-    "Company mode backend for slime."
-    (let ((candidate (and arg (substring-no-properties arg))))
-      (cl-case command
-        (init
-         (slime-company-active-p))
-        (prefix
-         (when (and ;; OUR CHANGE
-                (or (slime-company-active-p)
-                    (k-slime-command-p current-minibuffer-command))
-                (slime-connected-p)
-                (or slime-company-complete-in-comments-and-strings
-                    (null (slime-company--in-string-or-comment))))
-           (company-grab-symbol)))
-        (candidates
-         (slime-company--fetch-candidates-async candidate))
-        (meta
-         (let ((*slime-company--meta-request* t))
-           (slime-company--arglist candidate)))
-        (annotation
-         (concat (when slime-company-display-arglist
-                   (slime-company--arglist-only candidate))
-                 (when slime-company-display-flags
-                   (concat " " (get-text-property 0 'flags arg)))))
-        (doc-buffer
-         (unless *slime-company--meta-request*
-           (slime-company--doc-buffer candidate)))
-        (quickhelp-string
-         (unless *slime-company--meta-request*
-           (slime-company--quickhelp-string candidate)))
-        (location
-         (slime-company--location candidate))
-        (post-completion
-         (slime-company--post-completion candidate))
-        (sorted
-         (eq slime-company-completion 'fuzzy))))))
+;;   (defun company-slime (command &optional arg &rest ignored)
+;;     "Company mode backend for slime."
+;;     (let ((candidate (and arg (substring-no-properties arg))))
+;;       (cl-case command
+;;         (init
+;;          (slime-company-active-p))
+;;         (prefix
+;;          (when (and ;; OUR CHANGE
+;;                 (or (slime-company-active-p)
+;;                     (k-slime-command-p current-minibuffer-command))
+;;                 (slime-connected-p)
+;;                 (or slime-company-complete-in-comments-and-strings
+;;                     (null (slime-company--in-string-or-comment))))
+;;            (company-grab-symbol)))
+;;         (candidates
+;;          (slime-company--fetch-candidates-async candidate))
+;;         (meta
+;;          (let ((*slime-company--meta-request* t))
+;;            (slime-company--arglist candidate)))
+;;         (annotation
+;;          (concat (when slime-company-display-arglist
+;;                    (slime-company--arglist-only candidate))
+;;                  (when slime-company-display-flags
+;;                    (concat " " (get-text-property 0 'flags arg)))))
+;;         (doc-buffer
+;;          (unless *slime-company--meta-request*
+;;            (slime-company--doc-buffer candidate)))
+;;         (quickhelp-string
+;;          (unless *slime-company--meta-request*
+;;            (slime-company--quickhelp-string candidate)))
+;;         (location
+;;          (slime-company--location candidate))
+;;         (post-completion
+;;          (slime-company--post-completion candidate))
+;;         (sorted
+;;          (eq slime-company-completion 'fuzzy))))))
 
 ;; (add-to-list 'load-path "~/.emacs.d/elpa/slime-20230222.1526/contrib/")
 ;; (require 'unix-in-slime "~/.quicklisp/local-projects/unix-in-lisp/unix-in-slime")
