@@ -1800,6 +1800,7 @@ git@github.com:tecosaur/screenshot.git
  typescript-mode
  cmake-mode
  lua-mode
+ powershell
  )
 
 ;; (use-package systemd)
