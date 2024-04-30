@@ -353,7 +353,7 @@ Thanks to Po Lu!
 
 #+end_src
 ** emacs configuration
-*** completion interface
+*** complete interface
 **** orderless
 #+begin_src emacs-lisp
 (use-package orderless)
@@ -1390,6 +1390,12 @@ Esc will be used to enter & leave normal mode
   :init
   (smart-hungry-delete-add-default-hooks))
 
+(setq smart-hungry-delete-major-mode-dedent-function-alist
+      '((python-mode . (lambda ()
+                         (interactive)
+                         (if (bolp)
+                             (python-indent-dedent-line-backspace 1)
+                           (python-indent-dedent-line-backspace (current-column)))))))
 #+end_src
 *** delsel
 Delete selection when we type or paste.
