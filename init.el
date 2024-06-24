@@ -29,3 +29,5 @@
 (set-default-coding-systems 'utf-8)
 
 (org-babel-load-file "~/.emacs.d/config.org")
+
+(find-file "~/org/gtd.org")

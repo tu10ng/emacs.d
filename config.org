@@ -195,7 +195,7 @@ change though customisation interface will not add to =init.el=.
      ("*Shell Command Output*"    :select nil :align bellow :size 0.4)
      ("*Async Shell Command*"     :select nil :align bellow :size 0.4)
      ("*sly-description*"     :select t)
-     ("*eshell*" :select t :align right :popup t :same nil :size 0.3)
+     (".*eshell.*" :select t :align right :popup t :same nil :size 0.3 :regexp t)
      ("*Org-Babel Error Output*"  :select nil :align bellow :size 0.3)
      ("*package update results*"  :select nil :align bellow :size 10)
      ("*Process List*"            :select t   :align bellow :size 0.3)
@@ -332,6 +332,20 @@ Thanks to Po Lu!
 #+begin_src emacs-lisp
 (use-package comment-dwim-2
   :bind (("M-;" . comment-dwim-2)))
+#+end_src
+*** shell, term
+not very good to use
+#+begin_src emacs-lisp
+(cond
+ (IS-WINDOWS
+  (setq explicit-shell-file-name "C:/Users/incubator/scoop/shims/bash.exe")
+  ;; (setq explicit-shell-file-name
+  ;;       "c:/Windows/System32/WindowsPowerShell/v1.0/powershell.EXE")
+  ))
+
+(use-package shx)
+(shx-global-mode 1)
+(setq shx-path-to-convert "magick") ;; convert.exe is deprecated, use magick.exe on windows
 #+end_src
 *** tmp keybinds
 #+begin_src emacs-lisp
@@ -594,6 +608,14 @@ corfu will not be tangled with move commands
           #'(lambda ()
               (setq-local company-idle-delay 0.4)))
 
+(add-hook 'comint-mode-hook
+          #'(lambda ()
+              (company-mode -1)))
+
+(add-hook 'eshell-mode-hook
+          #'(lambda ()
+              (company-mode -1)))
+
 
 (use-package company-quickhelp)
 (company-quickhelp-mode 1)
@@ -717,9 +739,17 @@ loading theme is remarkably slow
 (set-face-attribute 'mode-line nil
                     :foreground "green"
                     :background "DarkBlue")
-(set-face-attribute 'default nil
-                    :foreground "white"
-                    :background "#252525")
+(defun tu10ng/theme-toggle-white-on-gray ()
+  (interactive)
+  (set-face-attribute 'default nil
+                      :foreground "white"
+                      :background "#252525")
+  (run-with-timer (* 10 60) nil
+                  (lambda ()
+                    (set-face-attribute 'default nil
+                                        :foreground "green"
+                                        :background "#252525"))))
+
 (set-face-attribute 'default nil
                     :foreground "green"
                     :background "#252525")
@@ -1362,10 +1392,7 @@ Esc will be used to enter & leave normal mode
                              (Custom-mode . insert)))
 #+end_src
 **** meow config
-
 #+begin_src emacs-lisp
-
-
 (setq meow-use-clipboard t
       meow-visit-sanitize-completion nil
       meow-expand-exclude-mode-list nil
@@ -1532,6 +1559,7 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
          ("C-s l" . consult-line)
          ("C-s u" . consult-focus-lines)
          ("C-s i" . consult-imenu)
+         ("C-s x" . consult-recent-xref)
          ("M-g g" . consult-goto-line)             
          ("M-g o" . consult-outline)
          ("M-y" . consult-yank-pop)
@@ -1556,6 +1584,28 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
   (let ((point (re-search-forward name nil t)))
     (goto-char point)))
 (global-set-key (kbd "C-s n") #'tu10ng/search-and-jump-next)
+
+(defvar consult--xref-history nil
+  "History for the `consult-recent-xref' results.")
+
+(defun consult-recent-xref (&optional markers)
+  "Jump to a marker in MARKERS list (defaults to `xref--history'.
+
+The command supports preview of the currently selected marker position.
+The symbol at point is added to the future history."
+  (interactive)
+  (consult--read
+   (consult--global-mark-candidates
+    (or markers (flatten-list xref--history)))
+   :prompt "Go to Xref: "
+   :annotate (consult--line-prefix)
+   :category 'consult-location
+   :sort nil
+   :require-match t
+   :lookup #'consult--lookup-location
+   :history '(:input consult--xref-history)
+   :add-history (thing-at-point 'symbol)
+   :state (consult--jump-state)))
 
 #+end_src
 consult-dir
@@ -1828,9 +1878,10 @@ amuse oneself. Introducing: typewriter sounds!
 #+end_src
 *** wakatime
 #+begin_src emacs-lisp
-;; (use-package wakatime-mode)
-;; (setq wakatime-disable-on-error t)
-;; (global-wakatime-mode 1)
+(use-package wakatime-mode)
+(setq wakatime-disable-on-error t)
+(global-wakatime-mode 1)
+;; (setq wakatime-cli-path "wakatime")
 #+end_src
 *** rgb cursor
 #+begin_src emacs-lisp
@@ -1889,6 +1940,7 @@ git@github.com:tecosaur/screenshot.git
  cmake-mode
  lua-mode
  powershell
+ json-mode
  )
 
 ;; (use-package systemd)
@@ -1952,6 +2004,8 @@ Then adding a regex for it to =~/.config/git/config=
 (define-key org-mode-map [M-down] #'tu10ng/org-metadown)
 (define-key org-mode-map [M-up] #'tu10ng/org-metaup)
 (define-key org-mode-map (kbd "C-M-k") #'org-cut-subtree)
+
+(use-package htmlize)
 #+end_src
 *** actions
 **** defaults
@@ -2021,7 +2075,8 @@ I think it makes sense to have list bullets change with depth
 ***** org tempo
 #+begin_src emacs-lisp
 (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
-(add-to-list 'org-structure-template-alist '("ss" . "src bash"))
+(add-to-list 'org-structure-template-alist '("sb" . "src bash"))
+(add-to-list 'org-structure-template-alist '("sp" . "src powershell"))
 
 ;;(setf (cdr (assoc "e" org-structure-template-alist)) "src emacs-lisp")
 #+end_src
@@ -2071,7 +2126,7 @@ responsive.
 #+begin_src emacs-lisp
 (defun locally-defer-font-lock ()
   "Set jit-lock defer and stealth, when buffer is over a certain size."
-  (when (> (buffer-size) 100000)
+  (when (> (buffer-size) 200000)
     (setq-local jit-lock-defer-time 0.05
                 jit-lock-stealth-time 1
                 org-indent-mode nil)))
@@ -2296,6 +2351,7 @@ vpn may cause this fail!
 
 ;; (define-key python-mode-map [remap indent-buffer] #'python-black-buffer)
 
+(setq python-indent-guess-indent-offset-verbose nil)
 #+end_src
 ** makefile
 #+begin_src emacs-lisp
