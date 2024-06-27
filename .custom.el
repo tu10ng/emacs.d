@@ -144,22 +144,23 @@
      (">" org-agenda-remove-restriction-lock)))
  '(package-selected-packages
    '(ahk-mode all-the-icons apel auctex avy benchmark-init bison-mode
-              cdlatex clojure-mode-extra-font-locking cmake-mode
-              cnfonts comment-dwim-2 company company-quickhelp
-              consult-dir devdocs doct doom-modeline dtrt-indent ebnf
-              ebnf-mode electric-operator eros exec-path-from-shell
-              fish fish-mode flycheck gcmh geiser goto-last-change
-              graphviz-dot-mode groovy-mode haskell-mode helpful
-              hl-todo htmlize info-colors iscroll json-mode lox-mode
-              lsp-pyright lua-mode magit magit-delta magit-todos
-              markdown-mode meow module move-text nasm-mode org-appear
-              org-super-agenda ox-reveal pdf-tools popup posframe
-              powershell prettify-greek prettify-math py-yapf
-              pyim-basedict python-black quickrun racket-mode
-              rainbow-delimiters restart-emacs rust-mode selectic-mode
-              selectric-mode shackle shx slime slime-company
-              smart-hungry-delete speed-type symbol-overlay systemd
-              tldr try tuareg typescript-mode valign vertico-directory
+              casual-calc cdlatex clojure-mode-extra-font-locking
+              cmake-mode cnfonts comment-dwim-2 company
+              company-quickhelp consult-dir devdocs doct doom-modeline
+              dtrt-indent ebnf ebnf-mode electric-operator eros
+              exec-path-from-shell fish fish-mode flycheck gcmh geiser
+              goto-last-change graphviz-dot-mode groovy-mode
+              haskell-mode helpful hl-todo htmlize info-colors iscroll
+              json-mode lox-mode lsp-pyright lua-mode magit
+              magit-delta magit-todos markdown-mode meow module
+              move-text nasm-mode org-appear org-super-agenda
+              ox-reveal pdf-tools popup posframe powershell
+              prettify-greek prettify-math py-yapf pyim-basedict
+              python-black quickrun racket-mode rainbow-delimiters
+              restart-emacs rust-mode selectic-mode selectric-mode
+              shackle shx slime slime-company smart-hungry-delete
+              speed-type symbol-overlay systemd tldr try tuareg
+              typescript-mode valign vertico-directory
               volatile-highlights wakatime-mode which-key yaml-mode
               yapfify youdao-dictionary))
  '(safe-local-variable-values '((toc-org-max-depth . 3) (checkdoc-minor-mode . t)))

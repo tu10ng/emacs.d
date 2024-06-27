@@ -84,7 +84,7 @@ Test some package & modes
       read-char-choice-use-read-key t
       next-line-add-newlines t
       dabbrev-case-replace nil
-      max-mini-window-height 1
+      max-mini-window-height 4
       kill-read-only-ok t
       )
 
@@ -725,8 +725,22 @@ delete directory name in one go
 (use-package cnfonts)
 (cnfonts-mode 1)
 ;; 添加两个字号增大缩小的快捷键
-(define-key cnfonts-mode-map (kbd "C-x C--") #'cnfonts-decrease-fontsize)
-(define-key cnfonts-mode-map (kbd "C-x C-=") #'cnfonts-increase-fontsize)
+;; (define-key cnfonts-mode-map (kbd "C-x C--") #'cnfonts-decrease-fontsize)
+;; (define-key cnfonts-mode-map (kbd "C-x C-=") #'cnfonts-increase-fontsize)
+
+(setq use-default-font-for-symbols t)
+
+(defun cfs-set-symbol-fonts (fontsizes-list)
+  (set-fontset-font t 'symbol "Source Code Pro" nil 'append)
+  (set-fontset-font t 'symbol "Symbola" nil 'append)
+  (set-fontset-font t 'unicode "Source Code Pro" nil 'append)
+  (set-fontset-font t 'unicode "Symbola" nil 'append))
+
+(add-hook 'cnfonts-set-font-finish-hook 'cfs-set-symbol-fonts)
+
+;; ✝✚✡☥⎈☭☪☮☺☹ ☯☰☱☲☳☴☵☶☷
+;; ⇐⇒⇑⇓⇔⇗⇦⇨⇧
+;; ðɫŋɹɾƩθtʒæɑəəɚɜɛɝɪɪ̈ɒɔʊʊ̈ʌ𝑥٪
 #+end_src
 **** theme
 loading theme is remarkably slow
@@ -1878,9 +1892,9 @@ amuse oneself. Introducing: typewriter sounds!
 #+end_src
 *** wakatime
 #+begin_src emacs-lisp
-(use-package wakatime-mode)
-(setq wakatime-disable-on-error t)
-(global-wakatime-mode 1)
+;; (use-package wakatime-mode)
+;; (setq wakatime-disable-on-error t)
+;; (global-wakatime-mode 1)
 ;; (setq wakatime-cli-path "wakatime")
 #+end_src
 *** rgb cursor
@@ -2088,7 +2102,7 @@ I think it makes sense to have list bullets change with depth
 (add-hook 'org-indent-mode-hook #'org-modern-indent-mode)
 
 #+end_src
-**** =Valign= for Org Mode tables
+**** org table
 Use [[https://github.com/casouri/valign][valign]] for tables alignments.
 #+begin_src emacs-lisp
 ;; (use-package valign
@@ -2842,5 +2856,10 @@ https://github.com/kkinnear/zprint
 
 ;;(add-hook 'verilog-mode-hook #'flycheck-mode)
 #+end_src
+** calc
+#+begin_src emacs-lisp
+(use-package casual-calc
+  :bind (:map calc-mode-map ("h" . #'casual-calc-tmenu)))
 
-
+(setq calc-display-trail nil)
+#+end_src
