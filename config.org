@@ -622,7 +622,7 @@ corfu will not be tangled with move commands
 (setq company-quickhelp-delay 0.7)
 #+end_src
 **** vertico
-***** vertico common
+***** vertico common, minibuffer
 #+begin_src emacs-lisp
 (use-package vertico
   :hook (after-init . vertico-mode)
@@ -738,6 +738,11 @@ delete directory name in one go
 
 (add-hook 'cnfonts-set-font-finish-hook 'cfs-set-symbol-fonts)
 
+(defun font-installed-p (font-name)
+  "Check if font with FONT-NAME is available."
+  (find-font (font-spec :name font-name)))
+
+;; https://emacs-china.org/t/emacs/22193
 ;; ✝✚✡☥⎈☭☪☮☺☹ ☯☰☱☲☳☴☵☶☷
 ;; ⇐⇒⇑⇓⇔⇗⇦⇨⇧
 ;; ðɫŋɹɾƩθtʒæɑəəɚɜɛɝɪɪ̈ɒɔʊʊ̈ʌ𝑥٪
@@ -1567,6 +1572,16 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
 (global-unset-key "\C-s")
 (use-package consult
   :bind (
+         ([remap repeat-complex-command] . consult-complex-command)
+         ([remap switch-to-buffer] . consult-buffer)
+         ([remap switch-to-buffer-other-window] . consult-buffer-other-window)
+         ([remap switch-to-buffer-other-frame] . consult-buffer-other-frame)
+         ([remap project-switch-to-buffer] . consult-project-buffer)
+         ([remap bookmark-jump] . consult-bookmark)
+         ([remap goto-line] . consult-goto-line)
+         ([remap imenu] . consult-imenu)
+         ([remap yank-pop] . consult-yank-pop)
+         ([remap Info-search] . consult-info)
          ("C-x b" . consult-buffer)
          ("C-x 4b" . consult-buffer-other-window)
          ("C-s r" . consult-ripgrep)
@@ -1574,7 +1589,7 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
          ("C-s u" . consult-focus-lines)
          ("C-s i" . consult-imenu)
          ("C-s x" . consult-recent-xref)
-         ("M-g g" . consult-goto-line)             
+         ("M-g g" . consult-goto-line)
          ("M-g o" . consult-outline)
          ("M-y" . consult-yank-pop)
          )
@@ -1740,7 +1755,9 @@ TODO: can eros's overlay stay if its not covering the cursor?
  (IS-LINUX
   (require 'pyim-tsinghua-dict)
   (pyim-tsinghua-dict-enable)))
+
 (require 'pyim-cstring-utils)
+
 (defun my-orderless-regexp (orig-func component)
   (let ((result (funcall orig-func component)))
     (pyim-cregexp-build result)))
@@ -1756,6 +1773,17 @@ TODO: can eros's overlay stay if its not covering the cursor?
 
 ;; TODO: no help, maybe because when corfu selection is active, flymake will not check
 (setq flymake-no-changes-timeout 0.1)
+
+(use-package flymake
+  :ensure nil
+  ;; :hook (prog-mode . flymake-mode)
+  :hook (flymake-mode . (lambda ()
+                          (setq eldoc-documentation-functions
+                                (cons 'flymake-eldoc-function
+                                      (delq 'flymake-eldoc-function
+                                            eldoc-documentation-functions)))))
+  :init (setq elisp-flymake-byte-compile-load-path (cons "./" load-path)))
+
 #+end_src
 *** dictionary
 #+begin_src emacs-lisp
@@ -1966,7 +1994,7 @@ git@github.com:tecosaur/screenshot.git
 ;; (use-package riscv-mode)
 
 #+end_src
-* language confguration
+* package/mode confguration
 ** org mode
 *** system wide config
 **** git diff
@@ -2043,7 +2071,6 @@ I think it makes sense to have list bullets change with depth
 (setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
 #+end_src
 **** agenda
-***** default
 #+begin_src emacs-lisp
 (setq org-agenda-span 14
       org-agenda-restore-windows-after-quit t
@@ -2053,9 +2080,10 @@ I think it makes sense to have list bullets change with depth
                                  (todo . " %i %-12:c")
                                  (tags . " %i %-12:c")
                                  (search . " %i %-12:c"))
+      org-agenda-window-setup 'other-window
       )
 
-
+(add-hook 'org-agenda-mode-hook #'hl-line-mode)
 #+end_src
 **** capture
 ***** doct (declarative org capture templates)
@@ -2093,6 +2121,17 @@ I think it makes sense to have list bullets change with depth
 (add-to-list 'org-structure-template-alist '("sp" . "src powershell"))
 
 ;;(setf (cdr (assoc "e" org-structure-template-alist)) "src emacs-lisp")
+#+end_src
+**** refile
+#+begin_src emacs-lisp
+(use-package org-refile
+  :ensure nil
+  :after org
+  :custom
+  (org-refile-targets '((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5)))
+  (org-refile-use-outline-path t)
+  (org-outline-path-complete-in-steps nil)
+  (org-refile-allow-creating-parent-nodes 'confirm))
 #+end_src
 *** visuals
 **** org modern indent
@@ -2217,6 +2256,7 @@ from vitalyankh
 **** general settings
 #+begin_src emacs-lisp
 (setq org-export-async-debug t)
+
 #+end_src
 **** LaTeX export
 from vitalyankh
@@ -2355,6 +2395,12 @@ vpn may cause this fail!
       org-re-reveal-transition "slide"
       ;; org-re-reveal-plugins '(markdown notes math search zoom)
       org-reveal-root "/home/qb/Downloads/reveal.js-4.4.0/") ;TODO wrong path name
+#+end_src
+**** gfm markdown
+#+begin_src emacs-lisp
+(use-package ox-gfm
+  :after org
+  :custom (org-export-with-toc nil))
 #+end_src
 ** python
 #+begin_src emacs-lisp
@@ -2512,7 +2558,9 @@ vpn may cause this fail!
 #+end_src
 ** markdown mode
 #+begin_src emacs-lisp
-(use-package markdown-mode)
+(use-package markdown-mode
+  :mode (("\\.md\\.html\\'" . markdown-mode)
+         ("README\\.md\\'" . gfm-mode)))
 (setq markdown-command "marked")
 
 #+end_src
@@ -2862,4 +2910,28 @@ https://github.com/kkinnear/zprint
   :bind (:map calc-mode-map ("h" . #'casual-calc-tmenu)))
 
 (setq calc-display-trail nil)
+#+end_src
+** dired
+#+begin_src emacs-lisp
+(use-package dired
+  :ensure nil
+  ;; :hook (dired-mode . dired-hide-details-mode)
+  :custom
+  (dired-dwim-target t)
+  (dired-listing-switches "-alGhv --group-directories-first")
+  (dired-recursive-copies 'always)
+  (dired-kill-when-opening-new-dired-buffer t))
+
+(use-package diredfl
+  :hook (dired-mode . diredfl-global-mode))
+#+end_src
+** uniquify
+#+begin_src emacs-lisp
+(use-package uniquify
+  :ensure nil
+  :custom
+  (uniquify-buffer-name-style 'reverse)
+  (uniquify-separator " • ")
+  (uniquify-after-kill-buffer-p t)
+  (uniquify-ignore-buffers-re "^\\*"))
 #+end_src
