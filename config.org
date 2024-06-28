@@ -842,6 +842,9 @@ edge of the mode line align with left and right fringe."
       "  "
       (:eval (if (k-mode-line-selected-p) #("%c" 0 2 (face mode-line-emphasis))
                "%c"))
+      "+"
+      (:eval (number-to-string (- (line-end-position) (point))))
+      
       (#(" %l/" 0 3 (face mode-line-highlight))
        (:propertize (:eval (number-to-string (line-number-at-pos (point-max))))
                     face bold))))
@@ -2084,6 +2087,11 @@ I think it makes sense to have list bullets change with depth
       )
 
 (add-hook 'org-agenda-mode-hook #'hl-line-mode)
+#+end_src
+**** src
+#+begin_src emacs-lisp
+(setq org-src-window-setup 'split-window-below)
+
 #+end_src
 **** capture
 ***** doct (declarative org capture templates)
