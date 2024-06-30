@@ -22,6 +22,10 @@ please do not reward me credits if you find this config helpful.
 
 (global-set-key (kbd "M-k") #'tu10ng/kill-sexp-save)
 
+(defun open-dir ()
+  "open current project dir in windows explorer"
+  (interactive)
+  (shell-command (concat "start explorer /e,/select,\"" (replace-regexp-in-string "/" "\\\\" (buffer-file-name)) "\"")))
 #+end_src
 
 Test some package & modes
@@ -336,12 +340,12 @@ Thanks to Po Lu!
 *** shell, term
 not very good to use
 #+begin_src emacs-lisp
-(cond
- (IS-WINDOWS
-  (setq explicit-shell-file-name "C:/Users/incubator/scoop/shims/bash.exe")
-  ;; (setq explicit-shell-file-name
-  ;;       "c:/Windows/System32/WindowsPowerShell/v1.0/powershell.EXE")
-  ))
+;; (cond
+;;  (IS-WINDOWS
+;;   (setq explicit-shell-file-name "C:/Users/incubator/scoop/shims/bash.exe")
+;;   ;; (setq explicit-shell-file-name
+;;   ;;       "c:/Windows/System32/WindowsPowerShell/v1.0/powershell.EXE")
+;;   ))
 
 (use-package shx)
 (shx-global-mode 1)
@@ -1587,8 +1591,8 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
          ([remap Info-search] . consult-info)
          ("C-x b" . consult-buffer)
          ("C-x 4b" . consult-buffer-other-window)
-         ("C-s r" . consult-ripgrep)
-         ("C-s l" . consult-line)
+         ("C-s r" . wrapper/consult-ripgrep)
+         ("C-s l" . consult-line-symbol-at-point)
          ("C-s u" . consult-focus-lines)
          ("C-s i" . consult-imenu)
          ("C-s x" . consult-recent-xref)
@@ -1609,6 +1613,21 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
   (consult-async-input-throttle 0.2)
   (consult-async-input-debounce 0.1)
   )
+
+(defun consult-line-symbol-at-point ()
+  (interactive)
+  (consult-line (thing-at-point 'symbol)))
+
+(defun wrapper/consult-ripgrep (&optional dir given-initial)
+  "Pass the region to consult-ripgrep if available.
+
+DIR and GIVEN-INITIAL match the method signature of `consult-wrapper'."
+  (interactive "P")
+  (let ((initial
+         (or given-initial
+             (when (use-region-p)
+               (buffer-substring-no-properties (region-beginning) (region-end))))))
+    (consult-ripgrep dir initial)))
 
 ;; TODO: dwim, save name for 1min, or use last name as default; and save jump point, next invoke should start after last invoke's point, to avoid jumping to same word if user have made modifications.
 (defun tu10ng/search-and-jump-next (name)
@@ -1898,16 +1917,26 @@ TODO: can eros's overlay stay if its not covering the cursor?
 *** page-break-lines
 bug with `visula-line-mode', maybe use truncate-line, but truncate-line is ugly
 #+begin_src emacs-lisp
-(add-to-list 'load-path "~/.emacs.d/site-lisp/page-break-lines/")
-(require 'page-break-lines)
+;; (add-to-list 'load-path "~/.emacs.d/site-lisp/page-break-lines/")
+;; (require 'page-break-lines)
+;; (use-package page-break-lines)
+;; (setq page-break-lines-modes '(prog-mode
+;;                                shell-mode
+;;                                text-mode))
+;; (dolist (hook '(prog-mode-hook
+;;                 shell-mode-hook
+;;                 text-mode-hook))
+;;   (add-hook hook #'(lambda ()
+;;                      (page-break-lines-mode))))
 
-(dolist (hook '(prog-mode-hook
-                shell-mode-hook
-                text-mode-hook))
-  (add-hook hook #'(lambda ()
-                     (page-break-lines-mode))))
+;; (global-page-break-lines-mode)
+
+(use-package form-feed-st)
+(global-form-feed-st-mode)
 
 #+end_src
+
+
 *** image scroll
 #+begin_src emacs-lisp
 ;; (use-package iscroll)
@@ -1986,6 +2015,7 @@ git@github.com:tecosaur/screenshot.git
  lua-mode
  powershell
  json-mode
+ ripgrep
  )
 
 ;; (use-package systemd)
@@ -2140,6 +2170,27 @@ I think it makes sense to have list bullets change with depth
   (org-refile-use-outline-path t)
   (org-outline-path-complete-in-steps nil)
   (org-refile-allow-creating-parent-nodes 'confirm))
+#+end_src
+**** insert image
+#+begin_src emacs-lisp
+(defun org-insert-image-from-clipboard ()
+  "Insert an image from the clipboard into the current org buffer."
+  (interactive)
+  (let* ((current-dir (file-name-directory buffer-file-name))
+         (file-name-base (file-name-base buffer-file-name))
+         (attach-dir (concat current-dir "attach/" file-name-base "/"))
+         (image-file (concat attach-dir (format-time-string "%Y%m%d_%H%M%S") ".png")))
+    ;; Ensure attach directory exists
+    (unless (file-exists-p attach-dir)
+      (make-directory attach-dir t))
+    ;; Save the clipboard image to the attach directory
+    (if (eq system-type 'windows-nt)
+        (shell-command (concat "powershell -command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetImage().Save('" image-file "', [System.Drawing.Imaging.ImageFormat]::Png)\""))
+      (error "Unsupported OS"))
+    ;; Insert the link to the image in the org file
+    (insert (concat "[[file:" image-file "]]"))
+    (org-display-inline-images)))
+
 #+end_src
 *** visuals
 **** org modern indent

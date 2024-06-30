@@ -149,20 +149,22 @@
               company-quickhelp consult-dir devdocs dired diredfl doct
               doom-modeline dtrt-indent ebnf ebnf-mode
               electric-operator eros exec-path-from-shell fish
-              fish-mode flycheck fussy gcmh geiser goto-last-change
-              graphviz-dot-mode groovy-mode haskell-mode helpful
-              hl-todo htmlize info-colors iscroll json-mode lox-mode
-              lsp-pyright lua-mode magit magit-delta magit-todos
-              markdown-mode meow module move-text nasm-mode org-appear
-              org-super-agenda ox-gfm ox-reveal pdf-tools popup
-              posframe powershell prettify-greek prettify-math py-yapf
+              fish-mode flycheck form-feed-st fussy gcmh geiser
+              goto-last-change graphviz-dot-mode groovy-mode
+              haskell-mode helpful hl-todo htmlize info-colors iscroll
+              json-mode lox-mode lsp-pyright lua-mode magit
+              magit-delta magit-todos markdown-mode meow module
+              move-text nasm-mode org-appear org-super-agenda ox-gfm
+              ox-reveal page-break-lines pdf-tools popup posframe
+              powershell prettify-greek prettify-math py-yapf
               pyim-basedict python-black quickrun racket-mode
-              rainbow-delimiters restart-emacs rust-mode selectic-mode
-              selectric-mode shackle shx slime slime-company
-              smart-hungry-delete speed-type symbol-overlay systemd
-              tldr try tuareg typescript-mode valign vertico-directory
-              volatile-highlights wakatime-mode which-key yaml-mode
-              yapfify youdao-dictionary))
+              rainbow-delimiters restart-emacs ripgrep rust-mode
+              selectic-mode selectric-mode shackle shx slime
+              slime-company smart-hungry-delete speed-type
+              symbol-overlay systemd tldr try tuareg typescript-mode
+              valign vertico-directory volatile-highlights
+              wakatime-mode which-key yaml-mode yapfify
+              youdao-dictionary))
  '(safe-local-variable-values '((toc-org-max-depth . 3) (checkdoc-minor-mode . t)))
  '(wakatime-cli-path "C:\\Users\\incubator\\scoop\\shims\\wakatime-cli.EXE"))
 (custom-set-faces
