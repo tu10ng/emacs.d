@@ -7,6 +7,7 @@ InstallKeybdHook
 ; The following line is a contribution of NTEmacs wiki http://www49.atwiki.jp/ntemacs/pages/20.html
 SetKeyDelay 0
 
+; ---------------------------------------------------------------
 ^8::{
     ; DetectHiddenWindows true
 
@@ -46,6 +47,9 @@ CapsLock::{
 /::{
     Send "``"
 }
+
+; --------------------------------------------------------------
+; https://github.com/Eason0210/emacs.ahk
 
 ; turns to be 1 when ctrl-x is pressed
 global IS_PRE_X := 0
@@ -306,24 +310,13 @@ mark_whole_buffer()
     global IS_PRE_SPC := 0
 }
 
-
-^x::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        global IS_PRE_X := 1
-}
 ^f::
 {
     if is_target()
         Send(A_ThisHotkey)
     else
     {
-        if IS_PRE_X
-            find_file()
-        else
-            forward_char()
+        forward_char()
     }
 }
 !f::
@@ -358,6 +351,15 @@ mark_whole_buffer()
         delete_word()
 }
 
+; TODO bug: will kill backward and then insert 'S'
+; !BS::{
+;     if (is_target()) {
+;         Send(A_ThisHotkey)
+;     } else {
+;         Send("^{BS}")
+;     }
+; }
+
 ^k::
 {
     if is_target()
@@ -387,10 +389,8 @@ mark_whole_buffer()
         Send(A_ThisHotkey)
     else
     {
-        if IS_PRE_X
-            save_buffer()
-        else
-            isearch_forward()
+        save_buffer()
+        isearch_forward()
     }
 }
 ^r::
@@ -485,22 +485,6 @@ mark_whole_buffer()
         backward_char()
 }
 
-h::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-    {
-        if IS_PRE_X
-        {
-            mark_whole_buffer()
-            global IS_PRE_X := 0
-        }
-        else
-            Send(A_ThisHotkey)
-    }
-}
-
 ;; Toggle Chinese and English input method
 ^\::
 {
@@ -536,3 +520,55 @@ h::
         Send "^{/}"
     }
 }
+
+; --------------------------------------------------
+#Include ToolTipOptions.ahk
+ToolTipOptions.Init()
+ToolTipOptions.SetFont("BOLD s10", "Source Code Pro")
+ToolTipOptions.SetColors("Black", "Green")
+
+SetTimer WatchCursor, 16 ; 1000ms/60fps =~ 16.7ms
+
+ReadImeState(hWnd)
+{
+    ; WinGet,hWnd,ID,%WinTitle%
+    Return Send_ImeControl(ImmGetDefaultIMEWnd(hWnd), 0x005, "")
+}
+
+Send_ImeControl(DefaultIMEWnd, wParam, lParam)
+{
+    DetectHiddenWindows(true)
+    try {
+        ErrorLevel := SendMessage(0x283, wParam, lParam, , "ahk_id " DefaultIMEWnd)
+    } catch as e {
+        ; some window will will return error
+        return -1
+    } else {
+        return ErrorLevel
+    }
+}
+
+ImmGetDefaultIMEWnd(hWnd)
+{
+    return DllCall("imm32\ImmGetDefaultIMEWnd", "Uint", hWnd, "Uint")
+}
+
+WatchCursor(){
+    ; TODO: only show toop tip after user clicks
+    MouseGetPos(&x, &y, &id, &control)
+
+    imeState := ReadImeState(id)
+
+    ; should show ENG label?
+    if(imeState == -1){
+        ToolTip()
+        return
+    } else if (imeState == 0) {
+        ToolTip("E")
+        return
+    } else {
+        ToolTip("Z")
+        return
+    }
+}
+
