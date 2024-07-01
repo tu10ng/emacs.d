@@ -1592,7 +1592,7 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
          ("C-x b" . consult-buffer)
          ("C-x 4b" . consult-buffer-other-window)
          ("C-s r" . wrapper/consult-ripgrep)
-         ("C-s l" . consult-line-symbol-at-point)
+         ("C-s l" . consult-line)
          ("C-s u" . consult-focus-lines)
          ("C-s i" . consult-imenu)
          ("C-s x" . consult-recent-xref)
@@ -1613,10 +1613,6 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
   (consult-async-input-throttle 0.2)
   (consult-async-input-debounce 0.1)
   )
-
-(defun consult-line-symbol-at-point ()
-  (interactive)
-  (consult-line (thing-at-point 'symbol)))
 
 (defun wrapper/consult-ripgrep (&optional dir given-initial)
   "Pass the region to consult-ripgrep if available.
@@ -1658,6 +1654,16 @@ The symbol at point is added to the future history."
    :add-history (thing-at-point 'symbol)
    :state (consult--jump-state)))
 
+(defun consult-delete-default-contents ()
+  (remove-hook 'pre-command-hook 'consult-delete-default-contents)
+  (cond ((member this-command '(self-insert-command))
+         (delete-minibuffer-contents))
+        (t (put-text-property (minibuffer-prompt-end) (point-max) 'face 'default))))
+
+(consult-customize consult-line
+                   :initial (when-let ((string (thing-at-point 'symbol)))
+                              (add-hook 'pre-command-hook 'consult-delete-default-contents)
+                              (propertize string 'face 'shadow)))
 #+end_src
 consult-dir
 remap M-; in vertico-map to find and insert directory into minibuffer prompt

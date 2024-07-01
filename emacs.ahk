@@ -522,9 +522,11 @@ mark_whole_buffer()
 }
 
 ; --------------------------------------------------
+; https://github.com/selfiens/KorTooltip
+
 #Include ToolTipOptions.ahk
 ToolTipOptions.Init()
-ToolTipOptions.SetFont("BOLD s10", "Source Code Pro")
+ToolTipOptions.SetFont("BOLD s16", "Source Code Pro")
 ToolTipOptions.SetColors("Black", "Green")
 
 SetTimer WatchCursor, 16 ; 1000ms/60fps =~ 16.7ms
@@ -538,14 +540,8 @@ ReadImeState(hWnd)
 Send_ImeControl(DefaultIMEWnd, wParam, lParam)
 {
     DetectHiddenWindows(true)
-    try {
-        ErrorLevel := SendMessage(0x283, wParam, lParam, , "ahk_id " DefaultIMEWnd)
-    } catch as e {
-        ; some window will will return error
-        return -1
-    } else {
-        return ErrorLevel
-    }
+    ErrorLevel := SendMessage(0x283, wParam, lParam, , "ahk_id " DefaultIMEWnd)
+    return ErrorLevel
 }
 
 ImmGetDefaultIMEWnd(hWnd)
@@ -555,11 +551,14 @@ ImmGetDefaultIMEWnd(hWnd)
 
 WatchCursor(){
     ; TODO: only show toop tip after user clicks
-    MouseGetPos(&x, &y, &id, &control)
+    try {
+        MouseGetPos(&x, &y, &id, &control)
+        imeState := ReadImeState(id)
+    } catch as e {
+        ToolTip()
+        return
+    }
 
-    imeState := ReadImeState(id)
-
-    ; should show ENG label?
     if(imeState == -1){
         ToolTip()
         return
@@ -570,5 +569,6 @@ WatchCursor(){
         ToolTip("Z")
         return
     }
+
 }
 
