@@ -389,7 +389,7 @@ mark_whole_buffer()
         Send(A_ThisHotkey)
     else
     {
-        save_buffer()
+        ; save_buffer()
         isearch_forward()
     }
 }

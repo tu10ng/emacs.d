@@ -1732,8 +1732,11 @@ TODO: can eros's overlay stay if its not covering the cursor?
   (magit-diff-staged)
   (let ((msg (concat "commit by "
                      (user-full-name)
+                     (format
+                      " in %s"
+                      (message (symbol-name system-type)))
                      (format-time-string
-                      " in emacs@%Y-%m-%d %H:%M:%S"
+                      "@%Y-%m-%d %H:%M:%S"
                       (current-time)))))
     (magit-call-git "commit" "-m" msg))
   (magit-refresh)
