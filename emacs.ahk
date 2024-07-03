@@ -449,13 +449,14 @@ mark_whole_buffer()
     }
 }
 
-^a::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        move_beginning_of_line()
-}
+; ^a::
+; {
+;     if is_target()
+;         Send(A_ThisHotkey)
+;     else
+;         move_beginning_of_line()
+; }
+
 ^e::
 {
     if is_target()
