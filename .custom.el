@@ -162,9 +162,9 @@
               selectic-mode selectric-mode shackle shx slime
               slime-company smart-hungry-delete speed-type
               symbol-overlay systemd tldr try tuareg typescript-mode
-              valign vertico-directory volatile-highlights
-              wakatime-mode which-key yaml-mode yapfify
-              youdao-dictionary))
+              valign vertico-directory visible-mark
+              volatile-highlights wakatime-mode which-key yaml-mode
+              yapfify youdao-dictionary))
  '(safe-local-variable-values '((toc-org-max-depth . 3) (checkdoc-minor-mode . t)))
  '(wakatime-cli-path "C:\\Users\\incubator\\scoop\\shims\\wakatime-cli.EXE"))
 (custom-set-faces

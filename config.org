@@ -1231,6 +1231,25 @@ alias et="e -t"
 (setq symbol-overlay-idle-time 0.01)
 (add-hook 'prog-mode-hook #'symbol-overlay-mode)
 #+end_src
+*** visible/highlight mark
+#+begin_src emacs-lisp
+(defface visible-mark-face1
+  '((((type tty) (class mono)))
+    (t (:background "gray")))
+  "Example face which can be customized and added to subsequent face lists."
+  :group 'visible-mark)
+(defface visible-mark-face2
+  '((((type tty) (class mono)))
+    (t (:background "gray60")))
+  "Example face which can be customized and added to subsequent face lists."
+  :group 'visible-mark)
+
+(use-package visible-mark)
+(global-visible-mark-mode 1)
+(setq visible-mark-max 2)
+(setq visible-mark-faces `(visible-mark-face1
+			               visible-mark-face2))
+#+end_src
 * packages
 ** INTRUCTIONS
 This is where you install packages.
@@ -2098,10 +2117,7 @@ Then adding a regex for it to =~/.config/git/config=
       org-use-property-inheritance t
       ;; org-log-done 'time
       org-list-allow-alphabetical t
-      org-export-in-background t
       org-catch-invisible-edits 'smart
-      org-export-with-sub-superscripts '{} ;?
-      org-export-allow-bind-keywords t
       org-image-actual-width '(0.8)
       org-footnote-auto-adjust t)
 
@@ -2324,7 +2340,10 @@ from vitalyankh
 **** general settings
 #+begin_src emacs-lisp
 (setq org-export-async-debug t)
-
+(setq org-export-in-background nil
+      org-use-sub-superscripts '{}
+      org-export-allow-bind-keywords t
+      org-export-with-sub-superscripts nil)
 #+end_src
 **** LaTeX export
 from vitalyankh
@@ -2451,6 +2470,40 @@ theres already a default value
 ;;       "<script type=\"text/javascript\" src=\"%PATH\"></script>")
 #+end_src
 **** html
+#+begin_src emacs-lisp
+(defun replace-in-string (what with in)
+  (replace-regexp-in-string (regexp-quote what) with in nil 'literal))
+
+(defun org-html--format-image (source attributes info)
+  (progn
+    (setq source (replace-in-string "%20" " " source))
+    (format "<img src=\"data:image/%s;base64,%s\"%s />"
+            (or (file-name-extension source) "")
+            (base64-encode-string
+             (with-temp-buffer
+               (insert-file-contents-literally source)
+               (buffer-string)))
+            (file-name-nondirectory source))
+    ))
+
+(defun replace-prefix-if-present (string prefix new-prefix)
+  "If STRING starts with PREFIX, replace the PREFIX by NEW-PREFIX.
+   Else, returns NIL."
+  (if (string-prefix-p prefix string)
+      (concat new-prefix (substring string (length prefix)))
+    string))
+
+(defun org-org-html--format-image (source attributes info)
+  (format "<img src=\"data:image/%s+xml;base64,%s\"%s />"
+          (or (file-name-extension source) "")
+          (base64-encode-string
+           (with-temp-buffer
+             (insert-file-contents-literally (replace-prefix-if-present source "file:///" ""))
+             (buffer-string)))
+          (file-name-nondirectory source)))
+(advice-add #'org-html--format-image :override #'org-org-html--format-image)
+
+#+end_src
 ***** latex
 **** reveal
 By default reveal is rather nice, there are just a few tweaks that I consider a
@@ -2977,7 +3030,87 @@ https://github.com/kkinnear/zprint
 (use-package casual-calc
   :bind (:map calc-mode-map ("h" . #'casual-calc-tmenu)))
 
-(setq calc-display-trail nil)
+(setq calc-display-trail nil
+      calc-multiplication-has-precedence nil)
+
+;; input 0x16 will turn into 16#16
+(defun calcDigit-X ()
+  (interactive)
+  (or (boundp 'calc-buffer)
+      (use-local-map minibuffer-local-map))
+  (if (string= "0" (minibuffer-contents-no-properties))
+      (progn
+        (delete-minibuffer-contents)
+        (insert "16#"))
+    (calcDigit-nondigit)))
+
+(define-key calc-digit-map (kbd "x") #'calcDigit-X)
+
+;; make quick calc use current line
+(defun calc-do-quick-calc (&optional insert)
+  (require 'calc-ext)
+  (calc-check-defines)
+  (if (eq major-mode 'calc-mode)
+      (calc-algebraic-entry t)
+    (let (buf
+          shortbuf
+          (string (string-replace "0x" "16#"
+                                  (string-trim 
+                                   (thing-at-point 'line)))))
+      (save-excursion
+	    (calc-create-buffer)
+	    (let* ((calc-command-flags nil)
+	           (calc-dollar-values calc-quick-prev-results)
+	           (calc-dollar-used 0)
+	           (enable-recursive-minibuffers t)
+	           (calc-language (if (memq calc-language '(nil big))
+				                  'flat calc-language))
+	           (entry (calc-do-alg-entry (or string "") "Quick calc: " t 'calc-quick-calc-history))
+	           (alg-exp (mapcar 'math-evaluate-expr entry)))
+	      (when (and (= (length alg-exp) 1)
+		             (eq (car-safe (car alg-exp)) 'calcFunc-assign)
+		             (= (length (car alg-exp)) 3)
+		             (eq (car-safe (nth 1 (car alg-exp))) 'var))
+	        (set (nth 2 (nth 1 (car alg-exp))) (nth 2 (car alg-exp)))
+	        (calc-refresh-evaltos (nth 2 (nth 1 (car alg-exp))))
+	        (setq alg-exp (list (nth 2 (car alg-exp)))))
+	      (setq calc-quick-prev-results alg-exp
+                buf (mapconcat (lambda (x)
+                                 (math-format-value x 1000))
+			                   alg-exp
+			                   " ")
+		        shortbuf buf)
+	      (if (and (= (length alg-exp) 1)
+		           (memq (car-safe (car alg-exp)) '(nil))
+		           (< (length buf) 20)
+		           (= calc-number-radix 10))
+	          (setq buf (concat buf "  ("
+				                (let ((calc-number-radix 16))
+				                  (math-format-value (car alg-exp) 1000))
+				                ", "
+				                (let ((calc-number-radix 8))
+				                  (math-format-value (car alg-exp) 1000))
+                                ", "
+                                (let ((calc-number-radix 2))
+                                  (math-format-value (car alg-exp) 1000))
+				                (if (and (integerp (car alg-exp))
+					                     (> (car alg-exp) 0)
+					                     (< (car alg-exp) 127))
+				                    (format ", \"%c\"" (car alg-exp))
+				                  "")
+				                ")")))
+	      (if (and (< (length buf) (frame-width)) (= (length entry) 1)
+		           (featurep 'calc-ext))
+	          (let ((long (concat (math-format-value (car entry) 1000)
+				                  " =>  " buf)))
+		        (if (<= (length long) (- (frame-width) 8))
+		            (setq buf long))))
+	      (calc-handle-whys)
+	      (message "Result: %s" buf)))
+      (if (or insert
+              (eq last-command-event 10))
+	      (insert shortbuf)
+        (kill-new shortbuf)))))
 #+end_src
 ** dired
 #+begin_src emacs-lisp
