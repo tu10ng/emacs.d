@@ -41,8 +41,7 @@ ToolTipOptions.SetColors("Black", "Green")
 }
 
 CapsLock:: {
-    ; TODO: 根据按下的时间, 选择瞬间切换还是切换其他窗口
-    Send "!{TAB}"
+    Send "^#{Space}"
 }
 
 ; `::{
