@@ -26,6 +26,8 @@ please do not reward me credits if you find this config helpful.
   "open current project dir in windows explorer"
   (interactive)
   (shell-command (concat "start explorer /e,/select,\"" (replace-regexp-in-string "/" "\\\\" (buffer-file-name)) "\"")))
+
+(setq recenter-positions '(top middle bottom))
 #+end_src
 
 Test some package & modes
@@ -88,7 +90,7 @@ Test some package & modes
       read-char-choice-use-read-key t
       next-line-add-newlines t
       dabbrev-case-replace nil
-      max-mini-window-height 4
+      max-mini-window-height 1
       kill-read-only-ok t
       )
 
@@ -336,6 +338,34 @@ Thanks to Po Lu!
 #+begin_src emacs-lisp
 (use-package comment-dwim-2
   :bind (("M-;" . comment-dwim-2)))
+
+(setq comment-dwim-2--inline-comment-behavior 'reindent-comment)
+
+(defun comment-dwim-2 (&optional arg)
+  "Call a comment command according to the context."
+  (interactive "*P")
+  (if (use-region-p)
+	  (funcall cd2/region-command)
+	(if arg
+		(cd2/prefix-command)
+      (if (cd2/fully-commented-line-p)
+		  (progn
+			(cd2/uncomment-line)
+			(when (and (or (eq last-command 'comment-dwim-2)
+						   (eq last-command 'org-comment-dwim-2))
+					   (not (cd2/empty-line-p))
+					   (not (cd2/line-ends-with-multiline-string-p))
+					   (not (cd2/fully-commented-line-p)))
+			  (if (cd2/line-contains-comment-p)
+				  (cd2/inline-comment-command)
+				(comment-indent)))) ; Insert inline comment
+		(if (and (cd2/line-contains-comment-p)
+				 (or (eq last-command 'comment-dwim-2)
+					 (eq last-command 'org-comment-dwim-2)))
+			(cd2/comment-line)
+          (cd2/inline-comment-command)
+          (indent-according-to-mode))))))
+
 #+end_src
 *** shell, term
 not very good to use
@@ -628,6 +658,8 @@ corfu will not be tangled with move commands
 **** vertico
 ***** vertico common, minibuffer
 #+begin_src emacs-lisp
+(define-key minibuffer-inactive-mode-map [mouse-1] nil)
+
 (use-package vertico
   :hook (after-init . vertico-mode)
   :config
@@ -686,6 +718,7 @@ delete directory name in one go
 (use-package eglot)
 (setq eglot-stay-out-of '(company)) ;; dont change company capf
 (setq eglot-extend-to-xref t)
+(setq eglot-ignored-server-capabilities '(:documentOnTypeFormattingProvider))
 
 (add-to-list
  'completion-category-overrides '((eglot (styles orderless))))
@@ -1046,12 +1079,12 @@ if the buffer isn't a file, simply restart emacs."
 *** C-xk kill-buffer
 #+begin_src emacs-lisp
 (advice-add
- #'kill-this-buffer
+ #'kill-current-buffer
  :after
  #'(lambda () (ignore-errors
                 (delete-window))))
 
-(global-set-key (kbd "C-x k") 'kill-this-buffer)
+(global-set-key (kbd "C-x k") 'kill-current-buffer)
 #+end_src
 *** restore session
 #+BEGIN_SRC emacs-lisp
@@ -1980,10 +2013,23 @@ amuse oneself. Introducing: typewriter sounds!
 #+end_src
 *** wakatime
 #+begin_src emacs-lisp
-;; (use-package wakatime-mode)
-;; (setq wakatime-disable-on-error t)
-;; (global-wakatime-mode 1)
-;; (setq wakatime-cli-path "wakatime")
+(use-package wakatime-mode)
+(setq wakatime-disable-on-error t)
+(setq wakatime-cli-path "wakatime-cli")
+(global-wakatime-mode 1)
+
+(defun wakatime-save ()
+  "Send save notice to WakaTime."
+  (when (buffer-file-name (current-buffer))
+    (unless (file-remote-p default-directory)
+      (wakatime-call t))))
+
+(defun wakatime-ping ()
+  "Send ping notice to WakaTime."
+  (when (buffer-file-name (current-buffer))
+    (unless (file-remote-p default-directory)
+      (wakatime-call nil))))
+
 #+end_src
 *** rgb cursor
 #+begin_src emacs-lisp
@@ -2044,6 +2090,7 @@ git@github.com:tecosaur/screenshot.git
  powershell
  json-mode
  ripgrep
+ fish-mode
  )
 
 ;; (use-package systemd)
@@ -2548,6 +2595,7 @@ vpn may cause this fail!
 
 (c-add-style "hw"
              '((c-basic-offset . 4)     ; Guessed value
+               (indent-tabs-mode . nil)
                (c-cleanup-list . (brace-else-brace
                                   brace-elseif-brace
                                   brace-catch-brace
@@ -2649,6 +2697,7 @@ vpn may cause this fail!
 
 (setq c-default-style "hw"
       c-basic-offset 4)
+
 (add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
 #+end_src
 ** nasm mode

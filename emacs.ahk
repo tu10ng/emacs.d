@@ -40,12 +40,8 @@ CapsLock::{
     Send "!{TAB}"
 }
 
-`::{
-    Send "{/}"
-}
-
-; /::{
-;     Send "``"
+; `::{
+;     Send "{/}"
 ; }
 
 ; --------------------------------------------------------------
@@ -393,42 +389,42 @@ mark_whole_buffer()
         isearch_forward()
     }
 }
-^r::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        query_replace()
-}
+; ^r::
+; {
+;     if is_target()
+;         Send(A_ThisHotkey)
+;     else
+;         query_replace()
+; }
 
-!w::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        copy()
-}
-^y::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        paste()
-}
-^/::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        undo()
-}
-^+/::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        redo()
-}
+; !w::
+; {
+;     if is_target()
+;         Send(A_ThisHotkey)
+;     else
+;         copy()
+; }
+; ^y::
+; {
+;     if is_target()
+;         Send(A_ThisHotkey)
+;     else
+;         paste()
+; }
+; ^/::
+; {
+;     if is_target()
+;         Send(A_ThisHotkey)
+;     else
+;         undo()
+; }
+; ^+/::
+; {
+;     if is_target()
+;         Send(A_ThisHotkey)
+;     else
+;         redo()
+; }
 
 ;; Set the mark with C-SPC in Emacs
 ^Space::
@@ -523,6 +519,66 @@ mark_whole_buffer()
 }
 
 ; --------------------------------------------------
+; https://github.com/bceenaeiklmr/Taskbar-Color-Shifter/blob/main/TaskBar_ColorShift.ahk
+
+taskbar_change_color(c1 := 0x000000) {
+    r := (0xff0000 & c1) >> 16
+    g := (0x00ff00 & c1) >> 8
+    b :=  0x0000ff & c1
+    p := 0x80
+
+    Color := Format("{:#02x}{:02x}{:02x}{:02x}", p, b, g, r)
+
+    TaskBar_SetAttr(2, Color)
+}
+
+taskbar_blur() {
+    TaskBar_SetAttr(3)
+}
+
+/**
+ * The following function is a fork (update to v2) of jNizM's Make the Windows 10 taskbar translucent (blur) repository.
+ * https://github.com/jNizM/AHK_TaskBar_SetAttr/tree/master
+ * https://autohotkey.com/boards/viewtopic.php?f=6&t=26752
+ * 
+ * TaskBar_SetAttr(option, color)
+ * 
+ * option -> 0 = off,
+ *           1 = gradient    (+color),
+ *           2 = transparent (+color),
+ *           3 = blur
+ * 
+ * color  -> ABGR (alpha | blue | green | red) 0xffd7a78f
+ */
+TaskBar_SetAttr(accent_state := 0, gradient_color := "0x01000000")
+{
+    static init, hTrayWnd, ver := DllCall("GetVersion") & 0xff < 10
+    static pad := A_PtrSize = 8 ? 4 : 0, WCA_ACCENT_POLICY := 19
+
+    if !IsSet(init) {
+        if (ver)
+            throw ValueError("Minimum support client: Windows 10", -1)
+        if !(hTrayWnd := DllCall("user32\FindWindow", "str", "Shell_TrayWnd", "ptr", 0, "ptr"))
+            throw ValueError("Failed to get the handle", -1)
+        init := 1
+    }
+
+    ACCENT_POLICY := Buffer(16, 0)
+    NumPut("int", (accent_state > 0 && accent_state < 4) ? accent_state : 0, ACCENT_POLICY, 0)
+
+    if (accent_state >= 1) && (accent_state <= 2) && (RegExMatch(gradient_color, "0x[[:xdigit:]]{8}"))
+        NumPut("int", gradient_color, ACCENT_POLICY, 8)
+
+    WINCOMPATTRDATA := Buffer(4 + pad + A_PtrSize + 4 + pad, 0)
+    NumPut("int", WCA_ACCENT_POLICY, WINCOMPATTRDATA, 0)
+    NumPut("ptr", ACCENT_POLICY.ptr, WINCOMPATTRDATA, 4 + pad)
+    NumPut("uint", ACCENT_POLICY.Size, WINCOMPATTRDATA, 4 + pad + A_PtrSize)
+    if !(DllCall("user32\SetWindowCompositionAttribute", "ptr", hTrayWnd, "ptr", WINCOMPATTRDATA.ptr))
+        throw ValueError("Failed to set transparency / blur", -1)
+    return true
+}
+
+; --------------------------------------------------
 ; https://github.com/selfiens/KorTooltip
 
 #Include ToolTipOptions.ahk
@@ -530,7 +586,7 @@ ToolTipOptions.Init()
 ToolTipOptions.SetFont("BOLD s16", "Source Code Pro")
 ToolTipOptions.SetColors("Black", "Green")
 
-SetTimer WatchCursor, 16 ; 1000ms/60fps =~ 16.7ms
+SetTimer(WatchCursor, 16) ; 1000ms/60fps =~ 16.7ms
 
 ReadImeState(hWnd)
 {
@@ -560,14 +616,34 @@ WatchCursor(){
         return
     }
 
+    ; ToolTip(imeState)
+    ; return
+
     if(imeState == -1){
-        ToolTip()
+        ; ToolTip()
+        taskbar_blur()
         return
     } else if (imeState == 0) {
-        ToolTip("E")
+        ; ToolTip("E")
+        taskbar_change_color(0x0000ff)
         return
     } else {
-        ToolTip("Z")
+        if WinActive("ahk_exe WeChat.exe") { ; wechat always return imeState == 1
+            ; ToolTip()
+            taskbar_blur()
+            return
+        }
+        if WinActive("ahk_exe Telegram.exe") { ; wechat always return imeState == 1
+            ; ToolTip()
+            taskbar_blur()
+            return
+        }
+        ; ToolTip("Z")
+        taskbar_change_color(0xff0000)
+
+        if (A_TimeIdle > 5000) {
+            Send "^#{Space}"
+        }
         return
     }
 
