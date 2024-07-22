@@ -3188,6 +3188,7 @@ https://github.com/kkinnear/zprint
 ** ahk mode
 #+begin_src emacs-lisp
 (add-hook 'ahk-mode-hook #'eglot-ensure)
+(add-hook 'ahk-mode-hook #'symbol-overlay-mode)
 
 (add-to-list 'eglot-server-programs '(ahk-mode "node" "C:/Users/incubator/Projects/vscode-autohotkey2-lsp/server/dist/server.js" "--stdio"))
 

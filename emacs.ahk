@@ -7,6 +7,11 @@ InstallKeybdHook
 ; The following line is a contribution of NTEmacs wiki http://www49.atwiki.jp/ntemacs/pages/20.html
 SetKeyDelay 0
 
+#Include ToolTipOptions.ahk
+ToolTipOptions.Init()
+ToolTipOptions.SetFont("BOLD s16", "Source Code Pro")
+ToolTipOptions.SetColors("Black", "Green")
+
 ; ---------------------------------------------------------------
 ^8:: {
     ; DetectHiddenWindows true
@@ -453,11 +458,10 @@ mark_whole_buffer()
 ; --------------------------------------------------
 ; https://github.com/bceenaeiklmr/Taskbar-Color-Shifter/blob/main/TaskBar_ColorShift.ahk
 
-taskbar_change_color(c1 := 0x000000) {
+taskbar_change_color(c1 := 0x000000, p := 0x80) {
     r := (0xff0000 & c1) >> 16
     g := (0x00ff00 & c1) >> 8
     b := 0x0000ff & c1
-    p := 0x80
 
     Color := Format("{:#02x}{:02x}{:02x}{:02x}", p, b, g, r)
 
@@ -466,6 +470,10 @@ taskbar_change_color(c1 := 0x000000) {
 
 taskbar_blur() {
     TaskBar_SetAttr(3)
+}
+
+taskbar_transparent() {
+    TaskBar_SetAttr(2, "0x01000000")
 }
 
 /**
@@ -511,73 +519,46 @@ TaskBar_SetAttr(accent_state := 0, gradient_color := "0x01000000")
 }
 
 ; --------------------------------------------------
-; https://github.com/selfiens/KorTooltip
-
-#Include ToolTipOptions.ahk
-ToolTipOptions.Init()
-ToolTipOptions.SetFont("BOLD s16", "Source Code Pro")
-ToolTipOptions.SetColors("Black", "Green")
-
 SetTimer(WatchCursor, 16) ; 1000ms/60fps =~ 16.7ms
 
-ReadImeState(hWnd)
-{
-    ; WinGet,hWnd,ID,%WinTitle%
-    Return Send_ImeControl(ImmGetDefaultIMEWnd(hWnd), 0x005, "")
-}
-
-Send_ImeControl(DefaultIMEWnd, wParam, lParam)
+ReadImeState()
 {
     DetectHiddenWindows(true)
-    ErrorLevel := SendMessage(0x283, wParam, lParam, , "ahk_id " DefaultIMEWnd)
-    return ErrorLevel
-}
 
-ImmGetDefaultIMEWnd(hWnd)
-{
-    return DllCall("imm32\ImmGetDefaultIMEWnd", "Uint", hWnd, "Uint")
+    hWnd := WinGetId("A")
+    id := DllCall("imm32\ImmGetDefaultIMEWnd", "Uint", hWnd, "Uint")
+
+    ret := SendMessage(0x283, 0x005, 0, , id)
+    Return ret
 }
 
 WatchCursor() {
-    ; TODO: only show toop tip after user clicks
     try {
-        MouseGetPos(&x, &y, &id, &control)
-        imeState := ReadImeState(id)
+        imeState := ReadImeState()
+        ; ToolTip(imeState)
     } catch as e {
-        ToolTip()
+        taskbar_transparent()
         return
     }
 
-    ; ToolTip(imeState)
-    ; return
-
-    if (imeState == -1) {
-        ; ToolTip()
-        taskbar_blur()
-        return
-    } else if (imeState == 0) { ; english
-        ; ToolTip("E")
-        ; taskbar_change_color(0x0000ff)
-        taskbar_blur()
-        return
-    } else {                                 ; chinese
+    if (imeState == 0) { ; english
+        taskbar_transparent()
+    } else if (imeState == 1) { ; chinese
         if WinActive("ahk_exe WeChat.exe") { ; TODO: when mouse is hover over wechat, even wechat isn't the active window, will return imeState == 1
-            ; ToolTip()
-            taskbar_blur()
+            taskbar_transparent()
             return
         }
         if WinActive("ahk_exe Telegram.exe") { ; telegram the same
-            ; ToolTip()
-            taskbar_blur()
+            taskbar_transparent()
             return
         }
-        ; ToolTip("Z")
         taskbar_change_color(0xff0000)
 
         if (A_TimeIdle > 5000) {
             Send "^#{Space}"
         }
-        return
+    } else {
+        taskbar_transparent()
     }
 
 }
