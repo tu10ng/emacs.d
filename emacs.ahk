@@ -515,7 +515,7 @@ TaskBar_SetAttr(accent_state := 0, gradient_color := "0x01000000")
     if !(DllCall("user32\SetWindowCompositionAttribute", "ptr", hTrayWnd, "ptr", WINCOMPATTRDATA.ptr))
         throw ValueError("Failed to set transparency / blur", -1)
 
-    ; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=26752&sid=0fef180ce2f81a9265b75a6d6384d66f&start=20
+    ; https://www.autohotkey.com/boards/viewtopic.php?p=462595#p462595
     ohMultipleMonitor := WinGetList("ahk_class Shell_SecondaryTrayWnd")
     ahMultipleMonitor := Array()
     For v in ohMultipleMonitor {
