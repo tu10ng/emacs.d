@@ -8,7 +8,7 @@ InstallKeybdHook
 SetKeyDelay 0
 
 ; ---------------------------------------------------------------
-^8::{
+^8:: {
     ; DetectHiddenWindows true
 
     if !WinExist("ahk_exe WindowsTerminal.exe")
@@ -19,11 +19,11 @@ SetKeyDelay 0
         WinActivate
 }
 
-[::{
+[:: {
     Send "("
 }
 
-]::{
+]:: {
     Send ")"
 }
 
@@ -31,11 +31,11 @@ SetKeyDelay 0
     Send "["
 }
 
-)::{
+):: {
     Send "]"
 }
 
-CapsLock::{
+CapsLock:: {
     ; TODO: 根据按下的时间, 选择瞬间切换还是切换其他窗口
     Send "!{TAB}"
 }
@@ -60,34 +60,34 @@ is_target()
 {
     if WinActive("ahk_class ConsoleWindowClass") ; Cygwin
         return 1
-if WinActive("ahk_exe Code.exe") ;vscode
-    return 1
-; if WinActive("ahk_exe devenv.exe") ; Visual Studio 2022
-;     return 1
-if WinActive("ahk_class VMwareUnityHostWndClass") ; Avoid VMwareUnity with AutoHotkey
-    return 1
-if WinActive("ahk_class mintty")
-    return 1
-if WinActive("ahk_class Window Class")
-    return 1
-if WinActive("ahk_class CASCADIA_HOSTING_WINDOW_CLASS") ;Windows 10 terminal
-    return 1
-if WinActive("ahk_class Vim") ; GVI
-    return 1
-if WinActive("ahk_class Emacs") ; NTEmacs
-    return 1
-if WinActive("ahk_class X410_XAppWin")
-    return 1
-if WinActive("ahk_class RAIL_WINDOW")
-    return 1
-return 0
+    if WinActive("ahk_exe Code.exe") ;vscode
+        return 1
+    ; if WinActive("ahk_exe devenv.exe") ; Visual Studio 2022
+    ;     return 1
+    if WinActive("ahk_class VMwareUnityHostWndClass") ; Avoid VMwareUnity with AutoHotkey
+        return 1
+    if WinActive("ahk_class mintty")
+        return 1
+    if WinActive("ahk_class Window Class")
+        return 1
+    if WinActive("ahk_class CASCADIA_HOSTING_WINDOW_CLASS") ;Windows 10 terminal
+        return 1
+    if WinActive("ahk_class Vim") ; GVI
+        return 1
+    if WinActive("ahk_class Emacs") ; NTEmacs
+        return 1
+    if WinActive("ahk_class X410_XAppWin")
+        return 1
+    if WinActive("ahk_class RAIL_WINDOW")
+        return 1
+    return 0
 }
 
 is_smatraPDF()
 {
     if WinActive("ahk_class SUMATRA_PDF_FRAME") ; smatraPDF
         return 1
-return 0
+    return 0
 }
 
 delete_char()
@@ -331,7 +331,7 @@ mark_whole_buffer()
 }
 
 ^d::
-{ 
+{
     if is_target()
         Send(A_ThisHotkey)
     else
@@ -389,77 +389,7 @@ mark_whole_buffer()
         isearch_forward()
     }
 }
-; ^r::
-; {
-;     if is_target()
-;         Send(A_ThisHotkey)
-;     else
-;         query_replace()
-; }
 
-; !w::
-; {
-;     if is_target()
-;         Send(A_ThisHotkey)
-;     else
-;         copy()
-; }
-; ^y::
-; {
-;     if is_target()
-;         Send(A_ThisHotkey)
-;     else
-;         paste()
-; }
-; ^/::
-; {
-;     if is_target()
-;         Send(A_ThisHotkey)
-;     else
-;         undo()
-; }
-; ^+/::
-; {
-;     if is_target()
-;         Send(A_ThisHotkey)
-;     else
-;         redo()
-; }
-
-;; Set the mark with C-SPC in Emacs
-^Space::
-{
-    if WinActive("ahk_class Emacs") or WinActive("ahk_class  X410_XAppWin")
-        Send "^{@}"
-    else
-    {
-        if is_target()
-            Send "{CtrlDown}{Space}{CtrlUp}"
-        else
-        {
-            if IS_PRE_SPC
-                global IS_PRE_SPC := 0
-            else
-                global IS_PRE_SPC := 1
-        }
-    }
-}
-
-; ^a::
-; {
-;     if is_target()
-;         Send(A_ThisHotkey)
-;     else
-;         move_beginning_of_line()
-; }
-
-^e::
-{
-    if is_target()
-        Send(A_ThisHotkey)
-    else
-        move_end_of_line()
-}
 ^p::
 {
     if is_target()
@@ -467,6 +397,7 @@ mark_whole_buffer()
     else
         previous_line()
 }
+
 ^n::
 {
     if is_target()
@@ -474,6 +405,7 @@ mark_whole_buffer()
     else
         next_line()
 }
+
 ^b::
 {
     if is_target()
@@ -524,7 +456,7 @@ mark_whole_buffer()
 taskbar_change_color(c1 := 0x000000) {
     r := (0xff0000 & c1) >> 16
     g := (0x00ff00 & c1) >> 8
-    b :=  0x0000ff & c1
+    b := 0x0000ff & c1
     p := 0x80
 
     Color := Format("{:#02x}{:02x}{:02x}{:02x}", p, b, g, r)
@@ -606,7 +538,7 @@ ImmGetDefaultIMEWnd(hWnd)
     return DllCall("imm32\ImmGetDefaultIMEWnd", "Uint", hWnd, "Uint")
 }
 
-WatchCursor(){
+WatchCursor() {
     ; TODO: only show toop tip after user clicks
     try {
         MouseGetPos(&x, &y, &id, &control)
@@ -619,21 +551,22 @@ WatchCursor(){
     ; ToolTip(imeState)
     ; return
 
-    if(imeState == -1){
+    if (imeState == -1) {
         ; ToolTip()
         taskbar_blur()
         return
-    } else if (imeState == 0) {
+    } else if (imeState == 0) { ; english
         ; ToolTip("E")
-        taskbar_change_color(0x0000ff)
+        ; taskbar_change_color(0x0000ff)
+        taskbar_blur()
         return
-    } else {
-        if WinActive("ahk_exe WeChat.exe") { ; wechat always return imeState == 1
+    } else {                                 ; chinese
+        if WinActive("ahk_exe WeChat.exe") { ; TODO: when mouse is hover over wechat, even wechat isn't the active window, will return imeState == 1
             ; ToolTip()
             taskbar_blur()
             return
         }
-        if WinActive("ahk_exe Telegram.exe") { ; wechat always return imeState == 1
+        if WinActive("ahk_exe Telegram.exe") { ; telegram the same
             ; ToolTip()
             taskbar_blur()
             return
@@ -648,4 +581,3 @@ WatchCursor(){
     }
 
 }
-
