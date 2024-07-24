@@ -14,17 +14,6 @@ please do not reward me credits if you find this config helpful.
 ;; need to becalled before loading smerge
 (setq smerge-command-prefix "\C-cv")
 
-(defun tu10ng/kill-sexp-save ()
-  (interactive)
-  (save-excursion
-    (kill-sexp)
-    (yank)))
-
-(global-set-key (kbd "M-k") #'tu10ng/kill-sexp-save)
-(global-set-key (kbd "C-c C-o") #'browse-url)
-(global-set-key (kbd "M-{") #'backward-page)
-(global-set-key (kbd "M-}") #'forward-page)
-
 (defun open-dir ()
   "open current project dir in windows explorer"
   (interactive)
@@ -1327,167 +1316,8 @@ What a wonderful way to jump to buffer positions.
 	    which-key-sort-order 'which-key-prefix-then-key-order
 	    ))
 #+end_src
-*** meow
-i prefer stay in insert mode
-we treat meow as mode to manipulate text, with advantage of more keys provided than other package which usage complex kebindings which is hard to remember.
-Esc will be used to enter & leave normal mode
-**** meow setup
+*** meow (custom keybindings)
 #+begin_src emacs-lisp
-(use-package meow)
-(defun meow-setup ()
-  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-  (meow-motion-overwrite-define-key
-   '("j" . meow-next)
-   '("k" . meow-prev)
-   '("<escape>" . ignore))
-  (meow-leader-define-key
-   ;; SPC j/k will run the original command in MOTION state.
-   '("j" . "H-j")
-   '("k" . "H-k")
-   ;; Use SPC (0-9) for digit arguments.
-   '("1" . meow-digit-argument)
-   '("2" . meow-digit-argument)
-   '("3" . meow-digit-argument)
-   '("4" . meow-digit-argument)
-   '("5" . meow-digit-argument)
-   '("6" . meow-digit-argument)
-   '("7" . meow-digit-argument)
-   '("8" . meow-digit-argument)
-   '("9" . meow-digit-argument)
-   '("0" . meow-digit-argument)
-   '("/" . meow-keypad-describe-key)
-   '("?" . meow-cheatsheet))
-  (meow-normal-define-key
-   '("0" . meow-expand-0)
-   '("9" . meow-expand-9)
-   '("8" . meow-expand-8)
-   '("7" . meow-expand-7)
-   '("6" . meow-expand-6)
-   '("5" . meow-expand-5)
-   '("4" . meow-expand-4)
-   '("3" . meow-expand-3)
-   '("2" . meow-expand-2)
-   '("1" . meow-expand-1)
-   '("-" . negative-argument)
-   '(";" . meow-reverse)
-   '("," . meow-inner-of-thing)
-   '("." . meow-bounds-of-thing)
-   '("(" . meow-beginning-of-thing)
-   '(")" . meow-end-of-thing)
-   '("/" . meow-visit)
-   ;; '("a" . meow-append)
-   '("A" . meow-join)
-   '("b" . meow-back-word)
-   '("B" . meow-back-symbol)
-   '("c" . meow-change)
-   '("d" . meow-delete)
-   '("D" . meow-backward-delete)
-   '("e" . tu10ng/open-below)
-   '("E" . tu10ng/open-above)
-   '("f" . meow-next-symbol)
-   '("F" . meow-mark-symbol)
-   '("g" . meow-cancel-selection)
-   '("G" . meow-grab)
-   '("h" . meow-left)
-   '("H" . meow-left-expand)
-   ;; '("i" . meow-insert)
-   '("j" . meow-next)
-   '("J" . meow-next-expand)
-   '("k" . meow-prev)
-   '("K" . meow-prev-expand)
-   '("l" . meow-right)
-   '("L" . meow-right-expand)
-   '("m" . meow-mark-word)
-   '("M" . meow-mark-symbol)
-   '("n" . meow-search)
-   '("o" . meow-block)
-   '("O" . meow-to-block)
-   '("p" . meow-yank)
-   '("P" . pop-to-mark-command)
-   '("q" . meow-quit)
-   '("r" . meow-replace)
-   '("R" . meow-swap-grab)
-   '("s" . meow-find)
-   '("S" . tu10ng/meow-find-back)
-   '("t" . meow-till)
-   '("u" . meow-undo)
-   '("U" . meow-undo-in-selection)
-   '("v" . meow-grab)
-   '("w" . meow-kill)
-   '("x" . meow-line)
-   '("X" . meow-line-expand)
-   '("y" . meow-save)
-   '("Y" . meow-sync-grab)
-   '("z" . meow-pop-selection)
-   '("'" . repeat)
-   '("\\" . quoted-insert)
-   '("<escape>" . meow-insert)))
-
-;; (defun meow-insert-define-key (&rest keybindings)
-;;   "Define key for insert state.
-
-;; Usage:
-;;   (meow-insert-define-key
-;;    '(\"C-<space>\" . meow-insert-exit))"
-;;   (mapcar (lambda (key-ref)
-;;             (define-key meow-insert-state-keymap
-;; 			            (kbd (car key-ref))
-;; 			            (meow--parse-def (cdr key-ref))))
-;;           keybindings))
-
-;; (meow-insert-define-key
-;;  '("ESC" . meow-insert-exit))
-
-
-#+end_src
-**** cursor behave
-#+begin_src emacs-lisp
-(setq meow-mode-state-list '((authinfo-mode . insert)
-                             (magit-mode . insert)
-                             (beancount-mode . insert)
-                             (bibtex-mode . insert)
-                             (cider-repl-mode . insert)
-                             (cider-test-report-mode . insert)
-                             (cider-browse-spec-view-mode . insert)
-                             (cargo-process-mode . insert)
-                             (conf-mode . insert)
-                             (deadgrep-edit-mode . insert)
-                             (deft-mode . insert)
-                             (diff-mode . insert)
-                             (ediff-mode . insert)
-                             (gud-mode . insert)
-                             (haskell-interactive-mode . insert)
-                             (help-mode . insert)
-                             (json-mode . insert)
-                             (jupyter-repl-mode . insert)
-                             (mix-mode . insert)
-                             (occur-edit-mode . insert)
-                             (pass-view-mode . insert)
-                             (prog-mode . insert)
-                             (py-shell-mode . insert)
-                             (restclient-mode . insert)
-                             (telega-chat-mode . insert)
-                             (term-mode . insert)
-                             (text-mode . insert)
-                             (vterm-mode . insert)
-                             (Custom-mode . insert)))
-#+end_src
-**** meow config
-#+begin_src emacs-lisp
-(setq meow-use-clipboard t
-      meow-visit-sanitize-completion nil
-      meow-expand-exclude-mode-list nil
-      meow-expand-hint-remove-delay 1
-      )
-
-(setq meow-cursor-type-insert '(block . 2))
-(meow-setup)
-;;(meow-global-mode 1)
-#+end_src
-**** meow commands
-#+begin_src emacs-lisp
-
-
 ;; TODO M-; should enter edit mode, insert mode still block cursor, one key to change window focus, keypad mode should default enter C-x
 ;; TODO put in seperate file and load
 (defun tu10ng/meow-find-back (n ch &optional expand)
@@ -1509,6 +1339,7 @@ Esc will be used to enter & leave normal mode
 	    (setq meow--last-find ch)
 	    (meow--maybe-highlight-num-positions
 	     '(meow--find-continue-backward . meow--find-continue-forward))))))
+
 (defun tu10ng/open-below()
   (interactive)
   (end-of-line)
@@ -1528,6 +1359,17 @@ Esc will be used to enter & leave normal mode
 
 (global-set-key "\C-o" 'tu10ng/open-below)
 (global-set-key "\M-o" 'tu10ng/open-above)
+
+(defun tu10ng/kill-sexp-save ()
+  (interactive)
+  (save-excursion
+    (kill-sexp)
+    (yank)))
+
+(global-set-key (kbd "M-k") #'tu10ng/kill-sexp-save)
+(global-set-key (kbd "C-c C-o") #'browse-url)
+(global-set-key (kbd "M-{") #'backward-page)
+(global-set-key (kbd "M-}") #'forward-page)
 
 #+end_src
 *** quickrun
