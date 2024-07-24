@@ -21,6 +21,9 @@ please do not reward me credits if you find this config helpful.
     (yank)))
 
 (global-set-key (kbd "M-k") #'tu10ng/kill-sexp-save)
+(global-set-key (kbd "C-c C-o") #'browse-url)
+(global-set-key (kbd "M-{") #'backward-page)
+(global-set-key (kbd "M-}") #'forward-page)
 
 (defun open-dir ()
   "open current project dir in windows explorer"
@@ -336,35 +339,35 @@ Thanks to Po Lu!
 #+end_src
 *** comment-dwim-2
 #+begin_src emacs-lisp
-(use-package comment-dwim-2
-  :bind (("M-;" . comment-dwim-2)))
+;; (use-package comment-dwim-2
+;;   :bind (("M-;" . comment-dwim-2)))
 
-(setq comment-dwim-2--inline-comment-behavior 'reindent-comment)
+;; (setq comment-dwim-2--inline-comment-behavior 'reindent-comment)
 
-(defun comment-dwim-2 (&optional arg)
-  "Call a comment command according to the context."
-  (interactive "*P")
-  (if (use-region-p)
-	  (funcall cd2/region-command)
-	(if arg
-		(cd2/prefix-command)
-      (if (cd2/fully-commented-line-p)
-		  (progn
-			(cd2/uncomment-line)
-			(when (and (or (eq last-command 'comment-dwim-2)
-						   (eq last-command 'org-comment-dwim-2))
-					   (not (cd2/empty-line-p))
-					   (not (cd2/line-ends-with-multiline-string-p))
-					   (not (cd2/fully-commented-line-p)))
-			  (if (cd2/line-contains-comment-p)
-				  (cd2/inline-comment-command)
-				(comment-indent)))) ; Insert inline comment
-		(if (and (cd2/line-contains-comment-p)
-				 (or (eq last-command 'comment-dwim-2)
-					 (eq last-command 'org-comment-dwim-2)))
-			(cd2/comment-line)
-          (cd2/inline-comment-command)
-          (indent-according-to-mode))))))
+;; (defun comment-dwim-2 (&optional arg)
+;;   "Call a comment command according to the context."
+;;   (interactive "*P")
+;;   (if (use-region-p)
+;; 	  (funcall cd2/region-command)
+;; 	(if arg
+;; 		(cd2/prefix-command)
+;;       (if (cd2/fully-commented-line-p)
+;; 		  (progn
+;; 			(cd2/uncomment-line)
+;; 			(when (and (or (eq last-command 'comment-dwim-2)
+;; 						   (eq last-command 'org-comment-dwim-2))
+;; 					   (not (cd2/empty-line-p))
+;; 					   (not (cd2/line-ends-with-multiline-string-p))
+;; 					   (not (cd2/fully-commented-line-p)))
+;; 			  (if (cd2/line-contains-comment-p)
+;; 				  (cd2/inline-comment-command)
+;; 				(comment-indent)))) ; Insert inline comment
+;; 		(if (and (cd2/line-contains-comment-p)
+;; 				 (or (eq last-command 'comment-dwim-2)
+;; 					 (eq last-command 'org-comment-dwim-2)))
+;; 			(cd2/comment-line)
+;;           (cd2/inline-comment-command)
+;;           (indent-according-to-mode))))))
 
 #+end_src
 *** shell, term
@@ -2078,7 +2081,6 @@ git@github.com:tecosaur/screenshot.git
 #+begin_src emacs-lisp
 (tu10ng/use-package-multi
  systemd
- ahk-mode
  ebnf-mode
  lox-mode
  graphviz-dot-mode
@@ -2092,14 +2094,6 @@ git@github.com:tecosaur/screenshot.git
  ripgrep
  fish-mode
  )
-
-;; (use-package systemd)
-;; (use-package ahk-mode)
-;; (use-package ebnf-mode)
-
-
-;; old & useless 
-;; (use-package riscv-mode)
 
 #+end_src
 * package/mode confguration
@@ -2361,7 +2355,8 @@ symbol prettify is set [[*pretty symbol characters][pretty symbol characters]]
 #+begin_src emacs-lisp
 (use-package org-appear)
 (add-hook 'org-mode-hook #'org-appear-mode)
-(setq org-appear-autolinks t)
+(setq org-appear-autolinks t
+      org-appear-delay 0.5)
 #+end_src
 **** no electric indent
 it will automatic delete trailing whitespace if empty headline
@@ -2585,7 +2580,7 @@ vpn may cause this fail!
 #+begin_src emacs-lisp
 (add-hook 'makefile-mode-hook #'(lambda () (fset 'makefile-warn-suspicious-lines 'ignore)))
 #+end_src
-** c mode
+** cc mode
 #+begin_src emacs-lisp
 (defun tu10ng/substatement-open-insert-space-before (_syntax pos)
   "like this: if (...)_{"
@@ -2699,6 +2694,21 @@ vpn may cause this fail!
       c-basic-offset 4)
 
 (add-hook 'c-mode-common-hook 'c-toggle-auto-hungry-state)
+#+end_src
+eglot
+#+begin_src emacs-lisp
+(add-to-list 'eglot-server-programs
+             '(c-mode
+               . ("clangd"
+                  ;; "-j=8"
+                  ;; "--log=error"
+                  ;; "--malloc-trim"
+                  ;; "--background-index"
+                  ;; "--clang-tidy"
+                  ;; "--completion-style=detailed"
+                  ;; "--pch-storage=memory"
+                  "--header-insertion=never"
+                  "--header-insertion-decorators=0")))
 #+end_src
 ** nasm mode
 #+begin_src emacs-lisp
@@ -3187,9 +3197,12 @@ https://github.com/kkinnear/zprint
 #+end_src
 ** ahk mode
 #+begin_src emacs-lisp
+(use-package ahk-mode
+  :load-path "c:/Users/incubator/Projects/ahk-mode"
+  :ensure nil)
+
 (add-hook 'ahk-mode-hook #'eglot-ensure)
 (add-hook 'ahk-mode-hook #'symbol-overlay-mode)
-
 (add-to-list 'eglot-server-programs '(ahk-mode "node" "C:/Users/incubator/Projects/vscode-autohotkey2-lsp/server/dist/server.js" "--stdio"))
 
 (define-key ahk-mode-map (kbd "C-M-\\") #'eglot-format-buffer)

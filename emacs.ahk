@@ -373,6 +373,7 @@ mark_whole_buffer()
         Send(A_ThisHotkey)
     else
         open_line_emacs()
+
     ; TODO: send C-enter in wechat
 }
 ^g::
