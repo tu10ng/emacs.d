@@ -315,10 +315,9 @@ mark_whole_buffer()
     if is_target()
         Send(A_ThisHotkey)
     else
-    {
         forward_char()
-    }
 }
+
 !f::
 {
     if is_target()

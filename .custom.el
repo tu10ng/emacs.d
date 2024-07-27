@@ -158,11 +158,11 @@
               ox-reveal page-break-lines pdf-tools popup posframe
               powershell prettify-greek prettify-math py-yapf
               pyim-basedict python-black quickrun racket-mode
-              rainbow-delimiters restart-emacs ripgrep rust-mode
-              selectic-mode selectric-mode shackle shx slime
-              slime-company smart-hungry-delete speed-type
-              symbol-overlay systemd tldr try tuareg typescript-mode
-              valign vertico-directory visible-mark
+              rainbow-delimiters rainbow-mode restart-emacs ripgrep
+              rust-mode selectic-mode selectric-mode shackle shx
+              sideline slime slime-company smart-hungry-delete
+              speed-type symbol-overlay systemd tldr try tuareg
+              typescript-mode valign vertico-directory visible-mark
               volatile-highlights wakatime-mode which-key yaml-mode
               yapfify youdao-dictionary))
  '(safe-local-variable-values '((toc-org-max-depth . 3) (checkdoc-minor-mode . t)))

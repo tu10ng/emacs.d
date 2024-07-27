@@ -1841,12 +1841,70 @@ bug with `visula-line-mode', maybe use truncate-line, but truncate-line is ugly
 (global-form-feed-st-mode)
 
 #+end_src
-
-
 *** image scroll
 #+begin_src emacs-lisp
 ;; (use-package iscroll)
 ;; (add-hook 'text-mode-hook #'iscroll-mode)
+#+end_src
+*** rainbow-mode
+#+begin_src emacs-lisp
+(use-package rainbow-mode)
+
+(setq rainbow-x-colors t)
+(define-globalized-minor-mode global-rainbow-mode rainbow-mode (lambda () (rainbow-mode 1)))
+#+end_src
+*** sideline
+#+begin_src emacs-lisp
+(use-package sideline)
+
+(setq sideline-delay 0.3)
+(global-sideline-mode)
+
+(use-package sideline-eldoc
+  :after sideline
+  :load-path "c:/Users/incubator/Projects/sideline-eldoc/"
+  :ensure nil)
+
+(setq sideline-eldoc-documentation nil)
+(setq sideline-backends-right '(sideline-eldoc))
+
+(defun sideline-eldoc--display (callback &rest _)
+  "Execute CALLBACK to display with sideline.
+
+Also display in minibuffer, causing cursor to extend very long("
+  (when eldoc-mode
+    (unless (and (minibufferp)
+                 sideline-eldoc-hide-minibuffer)
+      (when-let ((msg sideline-eldoc--message))
+        (funcall callback (sideline-eldoc--combine-all-infomations))))))
+
+(defun sideline-eldoc--extract-message (format-string &rest args)
+  "Extract eldoc message format FORMAT-STRING with ARGS."
+  (if (or (bound-and-true-p edebug-mode) (minibufferp))
+      (progn
+        (add-hook 'post-command-hook #'eldoc-minibuffer--cleanup)
+	    (with-current-buffer
+	        (window-buffer
+	         (or (window-in-direction 'above (minibuffer-window))
+		         (minibuffer-selected-window)
+		         (get-largest-window)))
+          (when (and mode-line-format
+                     (not (and (listp mode-line-format)
+                               (assq 'eldoc-mode-line-string mode-line-format))))
+	        (setq mode-line-format
+                  (funcall
+                   (if (listp mode-line-format) #'append #'list)
+                   (list "" '(eldoc-mode-line-string
+			                  (" " eldoc-mode-line-string " ")))
+                   mode-line-format)))
+          (setq eldoc-mode-line-string
+                (when (stringp format-string)
+                  (apply #'format-message format-string args)))
+          (force-mode-line-update)))
+    (if format-string
+        (setq-local sideline-eldoc--message (apply #'format format-string args))
+      (setq-local sideline-eldoc--message nil))))
+
 #+end_src
 ** frivolities
 *** selectric
@@ -1990,6 +2048,9 @@ Then adding a regex for it to =~/.config/git/config=
 (define-key org-mode-map [M-down] #'tu10ng/org-metadown)
 (define-key org-mode-map [M-up] #'tu10ng/org-metaup)
 (define-key org-mode-map (kbd "C-M-k") #'org-cut-subtree)
+(define-key org-mode-map (kbd "C-<return>") (lambda ()
+                                              (interactive)
+                                              (org-insert-heading nil t 1)))
 
 (use-package htmlize)
 #+end_src
@@ -3044,7 +3105,6 @@ https://github.com/kkinnear/zprint
   :ensure nil)
 
 (add-hook 'ahk-mode-hook #'eglot-ensure)
-(add-hook 'ahk-mode-hook #'symbol-overlay-mode)
 (add-to-list 'eglot-server-programs '(ahk-mode "node" "C:/Users/incubator/Projects/vscode-autohotkey2-lsp/server/dist/server.js" "--stdio"))
 
 (define-key ahk-mode-map (kbd "C-M-\\") #'eglot-format-buffer)
