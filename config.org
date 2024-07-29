@@ -178,7 +178,7 @@ change though customisation interface will not add to =init.el=.
      (xwidget-webkit-mode  :select t )
      (apropos-mode         :select t :align right :size 0.2)
      (help-mode            :select t :align right)
-     (helpful-mode         :select t :align right :size 0.3)
+     (helpful-mode         :select t :align right :popup t :size 0.3)
      (comint-mode          :select t :align right :size 0.2)
      (grep-mode            :select t :align right)
      (rg-mode              :select t :align right)
@@ -1083,6 +1083,8 @@ if the buffer isn't a file, simply restart emacs."
 ;; Back to the previous position
 (use-package saveplace
   :hook (after-init . save-place-mode))
+
+(setq save-place-limit 3000)
 
 #+end_src
 *** recent file
@@ -2024,7 +2026,8 @@ Then adding a regex for it to =~/.config/git/config=
       org-return-follows-link nil
       org-hide-emphasis-markers nil
       org-imenu-depth 5
-      org-use-speed-commands t)
+      org-use-speed-commands t
+      org-insert-heading-respect-content t)
 
 (global-set-key "\C-cl" #'org-store-link)
 (global-set-key "\C-ca" (lambda () (interactive) (org-agenda nil "n")))
@@ -2261,10 +2264,25 @@ symbol prettify is set [[*pretty symbol characters][pretty symbol characters]]
 (setq org-appear-autolinks t
       org-appear-delay 0.5)
 #+end_src
-**** no electric indent
-it will automatic delete trailing whitespace if empty headline
+**** dont delete trailing whitespace on headline
 #+begin_src emacs-lisp
 (add-hook 'org-mode-hook #'(lambda () (electric-indent-local-mode -1)))
+
+(define-key org-mode-map (kbd "RET")
+            #'(lambda (&optional arg interactive)
+                (interactive "P\np")
+                (org-return t arg interactive)))
+
+(defun org-newline-and-indent (&optional arg)
+  "like `newline-and-indent' except this function dont `delete-horizontal-space'"
+  (interactive "*p")
+  (unless arg
+    (setq arg 1))
+  (let ((electric-indent-mode nil))
+    (dotimes (_ arg)
+      (newline nil t)
+      (indent-according-to-mode))))
+
 #+end_src
 
 **** latex fragments
