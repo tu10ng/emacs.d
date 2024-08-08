@@ -147,7 +147,7 @@
               casual-calc cdlatex clojure-mode-extra-font-locking
               cmake-mode cnfonts comment-dwim-2 company
               company-quickhelp consult-dir devdocs dired diredfl doct
-              doom-modeline dtrt-indent ebnf ebnf-mode
+              dogears doom-modeline dtrt-indent ebnf ebnf-mode
               electric-operator eros exec-path-from-shell fish
               fish-mode flycheck form-feed-st fussy gcmh geiser
               goto-last-change graphviz-dot-mode groovy-mode

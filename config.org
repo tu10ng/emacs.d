@@ -432,6 +432,10 @@ not very good to use
 (global-set-key "\M-[" #'backward-sexp)
 (global-set-key "\M-]" #'forward-sexp)
 
+(global-set-key (kbd "C-<down-mouse-1>") (lambda (event)
+                                           (interactive (list last-command-event))
+                                           (posn-set-point (event-end event))
+                                           (browse-url (thing-at-point 'url t))))
 #+end_src
 ** emacs configuration
 *** complete interface
@@ -488,7 +492,6 @@ not very good to use
 **** capf
 only use TAB and S-TAB to select candidate and auto insert
 corfu will not be tangled with move commands
-
 ***** corfu
 #+begin_src emacs-lisp
 ;; TODO
@@ -1029,7 +1032,17 @@ comment out, uses v2raya's transparent proxy
 
 #+end_src
 ** other things
-*** editor interaction
+*** interaction
+#+begin_src emacs-lisp
+(defun tu10ng/copy-file-path ()
+  "if C-u, we copy windows flavor path"
+  (interactive)
+  (when buffer-file-name
+    (let ((path (file-truename buffer-file-name)))
+      (kill-new path)
+      (message path))))
+  
+#+end_src
 *** restart emacs
 #+begin_src emacs-lisp
 (use-package restart-emacs)
@@ -1471,6 +1484,15 @@ it is hard to correct insert without lookahead, like we shouldnt call auto-inser
 ;;                   (electric-operator-mode 1)))))
 
 
+#+end_src
+*** dogears
+#+begin_src emacs-lisp
+(use-package dogears
+  :bind (:map global-map
+              ("M-g M-k" . dogears-back)
+              ("M-g M-j" . dogears-forward)))
+(dogears-mode)
+(setq dogears-idle 1)
 #+end_src
 ** tools
 *** consult
@@ -1947,7 +1969,7 @@ speed-type
 #+begin_src emacs-lisp
 (use-package speed-type)
 
-(setq speed-type-min-chars 2000)
+(setq speed-type-min-chars 1000)
 
 (defun tu10ng/speed-type-buffer (full)
   (interactive "P")
@@ -1978,6 +2000,32 @@ git@github.com:tecosaur/screenshot.git
 ;; (use-package posframe)
 ;; (add-to-list 'load-path "~/.emacs.d/site-lisp/screenshot/")
 ;; (require 'screenshot)
+#+end_src
+*** bmi
+#+begin_src emacs-lisp
+(defun bmi-kilos-meters (weight height)
+  "Calculate body mass index from WEIGHT kilograms and HEIGHT meters."
+  (interactive "nKilograms:\nnMeters:")
+  ;; Convert integers to float for type coercion.
+  (bmi-message (/ (float weight) (* height height))))
+
+(defun bmi-kilos-centimeters (weight height)
+  "Calculate body mass index from WEIGHT kilograms and HEIGHT centimeters."
+  (interactive "nKilograms:\nnCentimeters:")
+  ;; Convert integers to float for type coercion.
+  (bmi-kilos-meters weight (/ (float height) 100)))
+
+(defun bmi-message (bmi-number)
+  "Return body mass index message for BMI-NUMBER."
+  (let ((bmi-status (cond
+                     ((> bmi-number 23.9) '("Overweight" 23.9))
+                     ((> bmi-number 18.5) '("Normal" 18.5))
+                     (t "obese"))))
+    (message
+     (format "Body mass index (BMI): %.1f >  %.1f (\"%s\")"
+             bmi-number (cadr bmi-status) (car bmi-status)))
+    ;; Return `bmi-number' as function's return value.
+    bmi-number))
 #+end_src
 ** file types
 #+begin_src emacs-lisp
@@ -2621,13 +2669,13 @@ eglot
 (add-to-list 'eglot-server-programs
              '(c-mode
                . ("clangd"
-                  ;; "-j=8"
-                  ;; "--log=error"
+                  "-j=8"
+                  "--log=error"
                   ;; "--malloc-trim"
-                  ;; "--background-index"
+                  "--background-index"
                   ;; "--clang-tidy"
-                  ;; "--completion-style=detailed"
-                  ;; "--pch-storage=memory"
+                  "--completion-style=detailed"
+                  "--pch-storage=memory"
                   "--header-insertion=never"
                   "--header-insertion-decorators=0")))
 #+end_src
@@ -3127,3 +3175,11 @@ https://github.com/kkinnear/zprint
 
 (define-key ahk-mode-map (kbd "C-M-\\") #'eglot-format-buffer)
 #+end_src
+** flowgraph-mode
+#+begin_src emacs-lisp
+(use-package flowgraph-mode
+  :load-path "c:/Users/incubator/Projects/flowgraph-mode"
+  :ensure nil)
+
+#+end_src
+
