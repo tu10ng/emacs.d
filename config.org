@@ -1083,13 +1083,18 @@ if the buffer isn't a file, simply restart emacs."
 #+end_src
 *** C-xk kill-buffer
 #+begin_src emacs-lisp
-(advice-add
- #'kill-current-buffer
- :after
- #'(lambda () (ignore-errors
-                (delete-window))))
+;; (advice-add
+;;  #'kill-current-buffer
+;;  :after
+;;  #'(lambda () (ignore-errors
+;;                 (delete-window))))
+(defun tu10ng/kill-current-buffer-delete-window ()
+  (interactive)
+  (kill-current-buffer)
+  (ignore-errors
+    (delete-window)))
 
-(global-set-key (kbd "C-x k") 'kill-current-buffer)
+(global-set-key (kbd "C-x k") #'tu10ng/kill-current-buffer-delete-window)
 #+end_src
 *** restore session
 #+BEGIN_SRC emacs-lisp
@@ -2013,18 +2018,10 @@ amuse oneself. Introducing: typewriter sounds!
 (rgb-cursor-mode 1)
 #+end_src
 *** typing game
-speed-type
 #+begin_src emacs-lisp
 (use-package speed-type)
 
 (setq speed-type-min-chars 1000)
-
-(setq-default speed-type--completed-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "q") 'quit-window)
-    (define-key map (kbd "r") 'speed-type--replay)
-    (define-key map (kbd "n") 'speed-type--play-next)
-    map))
 
 (defun tu10ng/speed-type-buffer (full)
   (interactive "P")
