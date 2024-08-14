@@ -2019,6 +2019,13 @@ speed-type
 
 (setq speed-type-min-chars 1000)
 
+(setq-default speed-type--completed-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") 'quit-window)
+    (define-key map (kbd "r") 'speed-type--replay)
+    (define-key map (kbd "n") 'speed-type--play-next)
+    map))
+
 (defun tu10ng/speed-type-buffer (full)
   (interactive "P")
   (if (or full
