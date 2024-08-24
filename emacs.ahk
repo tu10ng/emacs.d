@@ -566,7 +566,7 @@ WatchCursor() {
         }
         taskbar_change_color(0xff0000)
 
-        if (A_TimeIdle > 5000) {
+        if (A_TimeIdle > 10000) {
             Send "^#{Space}"
         }
     } else {
