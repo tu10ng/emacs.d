@@ -1809,6 +1809,45 @@ TODO: can eros's overlay stay if its not covering the cursor?
 (use-package devdocs
   :bind ("C-c b" . devdocs-lookup))
 
+;; fix (error "Specified window is not displaying the current buffer") 
+;; this error showed up after emacs 31
+(defun devdocs--render (entry)
+  "Render a DevDocs documentation entry, returning a buffer.
+
+ENTRY is an alist like those in the entry index of the document,
+possibly with an additional ENTRY.fragment which overrides the
+fragment part of ENTRY.path."
+  (with-current-buffer (get-buffer-create "*devdocs*")
+    (display-buffer (get-buffer-create "*devdocs*"))
+    (unless (eq major-mode 'devdocs-mode)
+      (devdocs-mode))
+    (let-alist entry
+      (let* ((inhibit-read-only t)
+             (extra-rendering-functions (cdr (assoc
+                                              (intern .doc.type)
+                                              devdocs-extra-rendering-functions)))
+             (shr-external-rendering-functions `((pre . devdocs--shr-tag-pre)
+                                                 ,@extra-rendering-functions
+                                                 ,@shr-external-rendering-functions))
+             (file (expand-file-name (format "%s/%s.html"
+                                             .doc.slug
+                                             (url-hexify-string (devdocs--path-file .path)))
+                                     devdocs-data-dir)))
+        (erase-buffer)
+        ;; TODO: cl-progv here for shr settings?
+        (shr-insert-document
+         (with-temp-buffer
+           (insert-file-contents file)
+           (libxml-parse-html-region (point-min) (point-max)))))
+      (set-buffer-modified-p nil)
+      (setq-local devdocs-current-docs (list .doc.slug))
+      (push entry devdocs--stack)
+      (setq-local list-buffers-directory (format-mode-line devdocs-header-line
+                                                           nil nil
+                                                           (current-buffer)))
+      (devdocs-goto-target)
+      (current-buffer))))
+
 #+end_src
 *** pdf-tools / doc-view
 #+begin_src emacs-lisp
